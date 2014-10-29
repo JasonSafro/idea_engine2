@@ -419,6 +419,8 @@ body.node-type-user-group div.hero-unit {
 
 
 /* BEGIN views styles */
+#block-views-user-ideas-block-user-ideas { margin-bottom: 25px; }
+
 div.view-bigwig-taxonomy div.view-header p {
   margin-bottom: 0px;
 }

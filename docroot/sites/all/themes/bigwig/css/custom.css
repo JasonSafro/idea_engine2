@@ -1,0 +1,132 @@
+    /*
+      
+    Theme Name: BigWig Drupal
+    Description: minimal portfolio / corporate drupal theme
+    Theme Developer: Theme Boutique
+    File: Custom css file  
+            
+    */
+    
+    /*------------------------------------------------------------------------*/
+    
+    /* HELPER CLASSES */
+	.tabs.primary {
+	    margin-top:  30px;
+	}
+	.front .admin-help,.front .site-body .size70.pe-spacer, .front .page-title, .front .size100.pe-spacer {
+	    display: none;
+	}
+	
+	.front .site-body .prescript .size70.pe-spacer {
+		display: block;
+	}
+	.front .content .block-views {
+		float: left;
+		overflow: hidden;
+		width: 100%;
+		margin-bottom: 60px;
+	}
+	
+	.text-right {
+	    text-align: right;
+	}
+	
+	.site-wrapper { background: #fff; }
+	
+	body.logged-in.front.fullscreen { overflow-y: visible; }
+	
+	/* BACKGROUND STYLES */
+	.wood { background: url('../img/wood.jpg'); }
+	.agsquare { background: url('../img/agsquare.png'); }
+	.retina_wood { background: url('../img/retina_wood.png'); }
+	.noisy_grid { background: url('../img/noisy_grid.png'); }
+	.tiny_grid { background: url('../img/tiny_grid.png'); }
+	
+	/* HOMEPAGE */
+	#block-views-bigwig-homepage-staff { margin-bottom: 0; }
+	#block-views-bigwig-homepage-services2col { margin-top: 70px; }
+	.front .pe-block.postscript { margin-bottom: 70px; }
+	
+	/* PORTFOLIO */
+	.page-portfolio-featured .pe-spacer-content, 
+	.page-portfolio-fullscreen .pe-spacer-content, 
+	.page-portfolio-columns .pe-spacer-content,
+	.page-portfolio-fullscreen .pe-spacer,
+	.page-gallery-fullscreen .pe-spacer {
+	    display: none;
+	}
+	
+	/* SERVICES */
+	.hero-unit.feature { padding: 10px 10px 5px; margin-right: 20px; margin-bottom: 10px; }
+	.hero-unit.feature .featureIcon { top: 15px; left: 15px; }
+	.hero-unit.feature  .feature-title { margin: 10px 0; }
+	
+	/* BLOG */
+	.comment-icon { background: url('../img/skin/meta_comments_icon.png') no-repeat right; width: 25px; height: 20px; display: block; float: left;}
+	
+	/* CONTACT */
+	.page-contact .form-item-copy input { float: left; margin-right: 10px; }
+	.page-contact .form-item { margin-bottom: 20px; }
+	
+	/* MISC */
+	.simplenews-subscribe label { display: none; }
+	.site-body .block h2.title, #block-views-bigwig-homepage-services2col h2 {color: #333; font-size: 18px; font-weight: 600; margin-bottom: 20px; line-height: 24px;}
+	.staff-member .feature .divider.dotted { border-color: #ccc; margin: 10px 0; }
+	.staff-member .hero-unit.feature { margin-right: 0; margin-bottom: 0; padding: 10px 20px 5px; }
+	.staff-member .feature .staff-social { margin-bottom: 10px; }
+	.view-display-id-active_staff .staff-member { margin-right: 20px; margin-bottom: 10px; }
+	.staff-member .feature.hero-unit p { font-size: 12px; margin-bottom: 20px; margin-top: 10px; line-height: 20px;}
+	
+	/* LAYOUT SETTINGS */
+	
+	.boxed .site-wrapper {-webkit-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07); -moz-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); }
+	.sticky-header .fixed.menu-bar { position: fixed; top: 0; z-index: 5000; width: 100%; -webkit-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07); -moz-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);}	
+	.sticky-header #admin-menu { z-index: 6000; }
+	.sticky-header.admin-menu .menu-bar.fixed { margin-top: 34px; }
+	.sticky-header.toolbar.toolbar-drawer .menu-bar.fixed { margin-top: 65px; }
+	.sticky-header.toolbar .menu-bar.fixed { margin-top: 30px; }
+	.fullscreen.sticky-header .menu-bar.fixed { position: relative; margin-top: 0 !important; z-index: 0 !important; }
+	
+	@media only screen and (min-width: 980px)  {
+		.boxed.sticky-header .menu-bar.fixed{ width: 980px; }
+	}
+	
+	@media only screen and (min-width: 767px) and (max-width: 979px) {
+		.boxed.sticky-header .menu-bar.fixed { width: 100%; }
+	}
+
+	/* MOBILE / TABLET */
+	
+	@media only screen and (max-width: 979px) {
+		.post-meta .categories { min-width: inherit; }
+	}
+	
+	@media (max-width: 979px) and (min-width: 768px) {
+		.front.fullscreen .site-body .pe-container,
+		.front.fullwidth .site-body .pe-container,
+		.fullscreen .site-body .pe-container {
+			width: 100%;
+		}
+		
+		.fullscreen .site-body .page-title .pe-container,
+		.fullscreen .view-bigwig-taxonomy .pe-container.filter {
+			width: 748px !important;
+			margin-left: auto !important;
+			margin-right: auto !important;
+		}
+	}
+
+	@media only screen and (max-width: 767px) {
+		body.front.fullscreen { overflow-y: visible; }
+		
+		.fullscreen .site-body .page-title .pe-container,
+		.fullscreen .view-bigwig-taxonomy .pe-container.filter {
+			width: 420px !important;
+			margin-left: auto !important;
+			margin-right: auto !important;
+		}
+		
+		footer .region { margin-bottom: 40px; }
+	}
+	
+	

@@ -1,0 +1,137 @@
+.slide-builder .peSlider>div.peCaption { opacity: 100; background: none; position: absolute; white-space: nowrap; max-width: none; padding: 0;}
+
+.peSlider>div>div.peCaption, .peSlider>div div.peCaption {
+    position: absolute;
+    visibility: hidden;
+    -webkit-transition-duration: 0s!important;
+    -webkit-transition-property: none!important;
+    -moz-transition-duration: 0s!important;
+    -moz-transition-property: none!important;
+    -ms-transition-duration: 0s!important;
+    -ms-transition-property: none!important;
+    -o-transition-duration: 0s!important;
+    -o-transition-property: none!important;
+}
+.peSlider>div.peCaption {
+    position: absolute;
+    z-index: 95;
+    opacity: 0;
+}
+@media(max-width:480px) {
+    .pe_visible_landscape, .pe_visible_tablet, .pe_visible_desktop {
+    display: none!important;
+}
+}@media(min-width:481px) and (max-width:767px) {
+    .pe_visible_tablet, .pe_visible_desktop {
+    display: none!important;
+}
+}@media(min-width:768px) and (max-width:980px) {
+    .pe_visible_desktop {
+    display: none!important;
+}
+}@media(max-width:767px) {
+    .peSlider>div.peCaption.pe-has-layers {
+    display: block!important;
+}
+}.peSlider>div.peCaption {
+    padding: 15px;
+    background-color: #000;
+    background-color: rgba(0, 0, 0, .8);
+    font-family: 'Open Sans';
+    max-width: 350px;
+}
+.peSlider>div.peCaption h3 {
+    color: #d95137;
+    font-family: 'Open Sans';
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 0;
+    letter-spacing: normal;
+}
+.peCaption p {
+    margin-bottom: 0;
+    color: #fff;
+    font-size: 12px;
+    line-height: 18px;
+}
+.peCaption .btn {
+    margin-top: 10px;
+}
+.peSlider>div.peCaption>.peCaptionLayer {
+    position: absolute;
+    font-size: 16px;
+    padding: 10px;
+    white-space: nowrap;
+}
+.peSlider>div.peCaption>.peCaptionLayer img {
+    display: block;
+    max-width: none;
+}
+.peSlider>div.peCaption>.pe-caption-large {
+    font-size: 45px;
+    line-height: 48px;
+    font-weight: 600;
+    letter-spacing: normal;
+}
+.peSlider>div.peCaption>.pe-caption-xlarge {
+    font-size: 75px;
+    line-height: 80px;
+    font-weight: 700;
+}
+.peSlider>div.peCaption>.pe-caption-huge {
+    font-size: 90px;
+    line-height: 90px;
+    font-weight: 400;
+    letter-spacing: -1px;
+    color: #222;
+}
+.peSlider>div.peCaption>.pe-caption-medium {
+    font-size: 24px;
+    line-height: 22px;
+    font-weight: 400;
+    letter-spacing: normal;
+}
+.peSlider>div.peCaption>.pe-caption-small {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    letter-spacing: normal;
+}
+.peSlider>div.peCaption>.pe-caption-bold {
+    font-weight: 700;
+    color: #222;
+}
+.peSlider>div.peCaption>.pe-caption-background {
+    background-color: #d95137;
+    padding: 5px 15px;
+    color: #fff;
+}
+.peSlider>div.peCaption>.pe-caption-background-black {
+    background-color: #000;
+    padding: 5px 15px;
+    color: #fff;
+}
+.peSlider>div.peCaption>.pe-caption-color {
+    color: #d95137;
+}
+.peSlider>div.peCaption>.peCaptionLayer.pe-caption-style-black {
+    font-family: 'Open Sans', arial, sans-serif;
+    font-weight: 300;
+    font-size: 70px;
+    line-height: 80px;
+    color: #303030;
+    text-shadow: -1px -1px #909090;
+    max-width: 940px;
+}
+.peSlider>div.peCaption>.peCaptionLayer.pe-caption-style-black.pe-caption-small {
+    font-weight: 300;
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 40px;
+}
+.peSlider>div.peCaption>.peCaptionLayer.pe-caption-white {
+    color: white;
+}
+.peSlider>div.peCaption>.peCaptionLayer.pe-caption-style-black.pe-caption-thick {
+    font-weight: 700;
+}

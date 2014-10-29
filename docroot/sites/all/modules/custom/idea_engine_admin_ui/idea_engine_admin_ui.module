@@ -1,0 +1,543 @@
+<?php
+  
+  // Define constants for the email fields
+  define( 'EMAIL_FIELD_SUBJECT', 'field_subject' );
+  define( 'EMAIL_FIELD_BODY', 'field_message_body' );
+  
+  // Define constants for the emails
+  define( 'EMAIL_NEW_IDEA_SUBMITTED_DEFAULT', 'idea_email_new_idea_default' );
+  define( 'EMAIL_REJECTED_DEFAULT', 'idea_email_rejected_default' );
+  define( 'EMAIL_REJECTED_IA_REVIEW_DEFAULT', 'idea_email_rejected_by_ia_default' );
+  define( 'EMAIL_VOTING_DEADLINE_APPROACHING_DEFAULT', 'idea_email_deadline_for_voting_approaching_default' );
+  define( 'EMAIL_REJECTED_VOTING_CLOSED_DEFAULT', 'idea_email_rejected_voting_closed_default' );
+  define( 'EMAIL_PROMOTED_TO_DEPT_DA', 'idea_email_promoted_to_dept_da' );
+  define( 'EMAIL_PROMOTED_TO_DEPT_VOTERS', 'idea_email_promoted_to_dept_voters' );
+  define( 'EMAIL_REJECTED_BY_DA_DEFAULT', 'idea_email_rejected_by_da_default' );
+  define( 'EMAIL_DEPT_REVIEW_REMINDER_DEFAULT', 'idea_email_da_review_reminder_default' );
+  define( 'EMAIL_PROMOTED_TO_IMPLEMENTATION_DEFAULT', 'idea_email_promoted_to_implementation_default' );
+  
+  function idea_engine_admin_ui_init() {
+    //print _idea_engine_admin_ui_get_email_subject( EMAIL_FIELD_BODY, EMAIL_NEW_IDEA_SUBMITTED_DEFAULT ); die;
+  }
+  
+  /**
+   * Implements hook_menu().
+   */
+  function idea_engine_admin_ui_menu() {
+
+    $items = array();
+
+    $items['admin/config/idea-engine'] = array(
+      'title' => 'Idea Engine',
+      'page callback' => 'idea_engine_admin_ui_placeholder_page',
+      'access callback' => 'user_access',
+      'access arguments' => array(PERM_IDEA_ADMIN),
+    );
+    
+    $items['admin/config/idea-engine/settings'] = array(
+      'title' => 'Idea Engine settings',
+      'page callback' => 'idea_engine_admin_ui_settings_page',
+      'access callback' => 'user_access',
+      'access arguments' => array(PERM_IDEA_ADMIN),
+    );
+
+    $items['admin/config/idea-engine/email-settings'] = array(
+      'title' => 'Idea Engine eMail settings',
+      'page callback' => 'idea_engine_admin_ui_email_settings_page',
+      'access callback' => 'user_access',
+      'access arguments' => array(PERM_IDEA_ADMIN),
+    );
+    
+    return $items;
+  }
+  
+  function idea_engine_admin_ui_placeholder_page() {
+    $out = '<h3>Welcome to the Idea Engine custom admin pages.</h3>';
+    return $out;
+  }
+  
+  // Settings form for custom Idea Engine settings
+  function idea_engine_admin_ui_settings_page() {
+    $form_id = 'idea_engine_admin_ui_settings_form';
+    $form_elements = drupal_get_form($form_id);
+    $output = drupal_render($form_elements);
+
+    return $output;
+  }
+
+  function idea_engine_admin_ui_settings_form() {
+    $form = array();
+    
+    $form['idea_vote_count_threshold'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Number of votes threshold'),
+      '#description' => 'The number of votes required for an idea to be considered by the department.',
+      '#default_value' => variable_get('idea_vote_count_threshold',25),
+    );
+    
+    $form['idea_vote_average_threshold'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Average vote threshold'),
+      '#description' => 'The average vote value (expressed as a PERCENTAGE) required for an idea to be considered by the department.',
+      '#default_value' => variable_get('idea_vote_average_threshold',80),
+    );
+
+    $form['idea_voting_period_duration'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Duration of voting period'),
+      '#description' => 'Number of days during which an idea may be voted upon.',
+      '#default_value' => variable_get('idea_voting_period_duration',90),
+    );
+    
+    $form['idea_days_remaining_for_voting_warning'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Send voting reminder after this many days'),
+      '#description' => 'Send warning emails to that the idea will expire after this many days.',
+      '#default_value' => variable_get('idea_days_remaining_for_voting_warning',30),
+    );
+    
+    $form['idea_department_reminder_email_interval'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Send reminder emails to the department every X days'),
+      '#description' => 'Reminder emails will be sent to the department about ideas at intervals of this many days.',
+      '#default_value' => variable_get('idea_department_reminder_email_interval',15),
+    );
+    
+    $form = system_settings_form($form);
+    return $form;
+  }
+  
+  // Settings form for custom Idea Engine settings
+  function idea_engine_admin_ui_email_settings_page() {
+    $form_id = 'idea_engine_admin_ui_email_settings_form';
+    $form_elements = drupal_get_form($form_id);
+    $output = drupal_render($form_elements);
+
+    return $output;
+  }
+  
+  function idea_engine_admin_ui_email_settings_form() {
+    // Get options
+    $options = array();
+    
+    // Get email node options
+    $sql = "SELECT nid, title FROM node WHERE type='email' AND status=1";
+    $result = db_query($sql);
+    $options['email'] = array();
+    foreach( $result as $one_result ) :
+      $options['email'][ $one_result->nid ] = $one_result->title;
+    endforeach;
+    
+    // Build the form
+    $form = array();
+    
+    $form[EMAIL_NEW_IDEA_SUBMITTED_DEFAULT] = array(
+      '#type' => 'select',
+      '#title' => t('New Idea E-Mail'),
+      '#description' => 'Inform the Idea Admin and the submitter that their idea has been received.',
+      '#options' => $options['email'],
+      '#default_value' => variable_get(EMAIL_NEW_IDEA_SUBMITTED_DEFAULT,0),
+      '#required' => TRUE,
+    );
+    
+    $form[EMAIL_REJECTED_DEFAULT] = array(
+      '#type' => 'select',
+      '#title' => t('Idea Rejected'),
+      '#description' => 'Inform the submitter and voters that their idea was rejected.',
+      '#options' => $options['email'],
+      '#default_value' => variable_get(EMAIL_REJECTED_DEFAULT,0),
+      '#required' => TRUE,
+    );
+    
+    // $form[EMAIL_REJECTED_IA_REVIEW_DEFAULT] = array(
+      // '#type' => 'select',
+      // '#title' => t('Idea Rejected by IA'),
+      // '#description' => 'Inform the submitter and voters that their idea has been rejected by the IA.',
+      // '#options' => $options['email'],
+      // '#default_value' => variable_get(EMAIL_REJECTED_IA_REVIEW_DEFAULT,0),
+      // '#required' => TRUE,
+    // );
+    
+    // $form[EMAIL_REJECTED_BY_DA_DEFAULT] = array(
+      // '#type' => 'select',
+      // '#title' => t('Idea Rejected by DA'),
+      // '#description' => 'Inform the submitter and voters that their idea was rejected by the Dept Admin.',
+      // '#options' => $options['email'],
+      // '#default_value' => variable_get(EMAIL_REJECTED_BY_DA_DEFAULT,0),
+      // '#required' => TRUE,
+    // );
+    
+    $form[EMAIL_VOTING_DEADLINE_APPROACHING_DEFAULT] = array(
+      '#type' => 'select',
+      '#title' => t('Idea Voting Deadline Approaching'),
+      '#description' => 'Inform the submitter and voters that the deadline for voting is approaching.',
+      '#options' => $options['email'],
+      '#default_value' => variable_get(EMAIL_VOTING_DEADLINE_APPROACHING_DEFAULT,0),
+      '#required' => TRUE,
+    );
+
+    // $form[EMAIL_REJECTED_VOTING_CLOSED_DEFAULT] = array(
+      // '#type' => 'select',
+      // '#title' => t('Idea Rejected: Voting Closed'),
+      // '#description' => 'Inform the submitter and voters that their idea has been rejected b\c it did not receive sufficient votes before the deadline.',
+      // '#options' => $options['email'],
+      // '#default_value' => variable_get(EMAIL_REJECTED_VOTING_CLOSED_DEFAULT,0),
+      // '#required' => TRUE,
+    // );
+
+    $form[EMAIL_PROMOTED_TO_DEPT_DA] = array(
+      '#type' => 'select',
+      '#title' => t('Promoted to Dept (DA)'),
+      '#description' => 'Inform the Dept Admin that an idea has been sent to their department for review.',
+      '#options' => $options['email'],
+      '#default_value' => variable_get(EMAIL_PROMOTED_TO_DEPT_DA,0),
+      '#required' => TRUE,
+    );
+
+    $form[EMAIL_PROMOTED_TO_DEPT_VOTERS] = array(
+      '#type' => 'select',
+      '#title' => t('Promoted to Dept (Voters)'),
+      '#description' => 'Inform voter and submitters that their idea has been sent to a department for review.',
+      '#options' => $options['email'],
+      '#default_value' => variable_get(EMAIL_PROMOTED_TO_DEPT_VOTERS,0),
+      '#required' => TRUE,
+    );
+
+    $form[EMAIL_DEPT_REVIEW_REMINDER_DEFAULT] = array(
+      '#type' => 'select',
+      '#title' => t('DA Reminder'),
+      '#description' => 'Remind the DA to review an idea.',
+      '#options' => $options['email'],
+      '#default_value' => variable_get(EMAIL_DEPT_REVIEW_REMINDER_DEFAULT,0),
+      '#required' => TRUE,
+    );
+
+    $form[EMAIL_PROMOTED_TO_IMPLEMENTATION_DEFAULT] = array(
+      '#type' => 'select',
+      '#title' => t('Promoted to Implementation'),
+      '#description' => 'Inform the submitter and voters that their idea is ready for implementation.',
+      '#options' => $options['email'],
+      '#default_value' => variable_get(EMAIL_PROMOTED_TO_IMPLEMENTATION_DEFAULT,0),
+      '#required' => TRUE,
+    );
+        
+    $form = system_settings_form($form);
+    return $form;
+  }
+  
+  /**
+   * Helper function to retrieve and populate email content
+   *
+   * @param $field enum  Currently (EMAIL_FIELD_SUBJECT, EMAIL_FIELD_BODY).
+   * @param $email enum  See list of email constants at top of file.
+   * @param $data  mixed An array of key=>value pairs. Meaning is contextual. See code.
+   */
+  function _idea_engine_admin_ui_get_email_field( $field, $email, $data = array() ) {
+    $out = FALSE;
+    
+    // Validate the field against a whitelist
+    switch( $field ) :
+      case EMAIL_FIELD_SUBJECT:
+      case EMAIL_FIELD_BODY:
+        // Carry on
+      break;
+      
+      default:
+        // return the subject
+        $field = EMAIL_FIELD_SUBJECT;
+      break;
+    endswitch;
+  
+    // Whitelist the events
+    switch( $email ) :
+      case EMAIL_NEW_IDEA_SUBMITTED_DEFAULT:
+      case EMAIL_REJECTED_DEFAULT:
+      case EMAIL_PROMOTED_TO_DEPT_DA:
+      case EMAIL_PROMOTED_TO_DEPT_VOTERS:
+      case EMAIL_PROMOTED_TO_IMPLEMENTATION_DEFAULT:
+      case EMAIL_DEPT_REVIEW_REMINDER_DEFAULT:
+      case EMAIL_VOTING_DEADLINE_APPROACHING_DEFAULT:      
+        // Get the email node
+        $email_nid = variable_get($email,0);
+        if( $email_node = node_load( $email_nid ) ) :
+          $out = $email_node->{$field}[LANGUAGE_NONE][0]['value'];
+        else :
+          $params = array( 
+            '%nid' => $email_nid,
+            '%email' => $email
+          );
+          watchdog( 'ie_email', 'Email node could not be found for email %email using NID %nid.', $params, WATCHDOG_DEBUG );
+        endif;
+      break;
+    endswitch;
+   
+    // Do all string replacements
+    if( $out ) :
+      // Prep $replacements
+      $replacements = array();
+      
+      // Look for stock items first
+      if( isset($data['node']) ) :
+        switch( $data['node']->type ) :
+          case 'idea':
+            $replacements['|idea_title|'] = $data['node']->title;
+            $replacements['|idea_url|'] = url( 'node/'.$data['node']->nid, array('absolute'=>TRUE) );
+            
+            // Add replacements based on workflow status
+            switch( $data['node']->field_workflow_state[LANGUAGE_NONE][0]['tid'] ) :
+            
+              case TID_IDEA_STATUS_REJECTED:
+                // Get the reason for rejection
+                if( 
+                  isset($data['node']->field_reason_for_rejection[LANGUAGE_NONE][0]['tid']) 
+                  && $term_reason_for_rejection = taxonomy_term_load( $data['node']->field_reason_for_rejection[LANGUAGE_NONE][0]['tid'] )
+                ) :
+                  $replacements['|idea_rejected_reason|'] = $term_reason_for_rejection->description;
+                else :
+                  $replacements['|idea_rejected_reason|'] = 'No reason provided';
+                endif;
+                
+                // Get the notes
+                $replacements['|idea_rejected_notes|'] = $data['node']->field_rejection_notes[LANGUAGE_NONE][0]['value'];
+              break;
+              
+            endswitch;
+          break;
+          
+        endswitch;
+      
+        unset( $data['node'] );
+      endif;
+      
+      // Now add in any remaining $data elements
+      foreach( $data as $key => $value ) :
+        $replacements[$key] = $value;
+      endforeach;
+    
+      $out = str_replace( array_keys($replacements), $replacements, $out );
+    endif;
+    
+watchdog('email_test', 'Field '.$field.' has value '.$out, array(), WATCHDOG_DEBUG);
+    
+    // Let's go home
+    return $out;
+  }
+  
+  /**
+   * Function to gather and organize needed email addresses.
+   *
+   * @param $addresses_for  Array   An array of known values identifying which types of email addresses are needed.
+   * @param $node           Mixed   A drupal node object -OR- FALSE.
+   *
+   * @return                String  A comma separated list of email addresses
+   */
+  function idea_engine_get_email_addresses( $addresses_for, $node = FALSE ) {
+    // Init
+    $out = FALSE;
+    $emails = array();
+
+    // Validate inputs
+    if( !is_array($addresses_for) || count($addresses_for)<1 ) :
+      return $out;
+    endif;
+
+//var_dump($addresses_for); die;
+    foreach( $addresses_for as $one_address_type ) :
+      switch( $one_address_type ) :
+
+        case 'author':
+          $one_type_emails = _idea_engine_admin_ui_return_author_email( $node );
+          if( is_array($one_type_emails) && count($one_type_emails)>0 ) :
+            $emails = $emails + $one_type_emails;
+          endif;
+        break;
+        
+        case 'da': 
+          $one_type_emails = _idea_engine_admin_ui_return_email_for_dept_admins( $node->nid );
+          if( is_array($one_type_emails) && count($one_type_emails)>0 ) :
+            $emails = $emails + $one_type_emails;
+          endif;
+        break;
+      
+        case 'ia':
+          $one_type_emails = _idea_engine_admin_ui_return_ia_email();
+          if( is_array($one_type_emails) && count($one_type_emails)>0 ) :
+            $emails = $emails + $one_type_emails;
+          endif;
+        break;
+        
+        case 'voters':
+          $one_type_emails = _idea_engine_admin_ui_return_email_for_voters( $node->nid );
+          if( is_array($one_type_emails) && count($one_type_emails)>0 ) :
+            $emails = $emails + $one_type_emails;
+          endif;
+        break;
+
+      endswitch;
+    endforeach;
+    
+    if( is_array($emails) && count($emails)>0 ) :
+      $out = implode( ',', $emails );
+    endif;
+
+    return $out;
+  }
+  
+  /**
+   * Helper function to get node author's email
+   *
+   * @return Array Array of email addresses keyed by UID
+   */
+  function _idea_engine_admin_ui_return_author_email( $node = FALSE ) {
+    // Init
+    $out = FALSE;
+    
+    // Validate input
+    if( !is_object($node) || !isset($node->uid) || empty($node->uid) ) :
+      watchdog( 'ie_admin_ui', 'Attempting to get "Author EMail" for a non-node: <pre>'.print_r($node,TRUE).'</pre>.', array(), WATCHDOG_DEBUG );
+      return $out;
+    endif;
+    
+    // Get author email address
+    if( $author = user_load($node->uid) ) :
+      return array( $node->uid => $author->mail );
+    else :
+      watchdog( 'ie_admin_ui', 'Failed to get author entity for node <pre>'.print_r($node,TRUE).'</pre>.', array(), WATCHDOG_DEBUG );
+      return $out;
+    endif;
+    
+    // Still here somehow? 
+    return $out;
+  }
+  
+  /**
+   * Helper function to get idea admins' email
+   *
+   * @return Array Array of email addresses keyed by UID
+   */
+  function _idea_engine_admin_ui_return_ia_email() {
+    return _idea_engine_admin_ui_return_email_by_perm( PERM_IDEA_ADMIN );
+  }
+
+  /**
+   * Helper function to get the email addresses for all users with a particular permission
+   *
+   * @param $perm String  The identifier for a permission.
+   
+   * @return      Array   Array of email addresses keyed by UID
+   */
+  function _idea_engine_admin_ui_return_email_by_perm( $perm ) {
+    // Init
+    $out = FALSE;
+    
+    // Get users by permission
+    $sql = "SELECT users.uid, users.mail
+      FROM users
+        INNER JOIN users_roles ON users.uid=users_roles.uid
+        INNER JOIN role_permission ON users_roles.rid=role_permission.rid
+      WHERE users.status=1
+        AND role_permission.permission='".$perm."'
+      ORDER BY mail";
+    $result = db_query($sql);
+    
+    // Organize query return
+    $emails = array();
+    foreach( $result as $one_row ) :
+      $emails[ $one_row->uid ] = $one_row->mail;
+    endforeach;
+    
+    // Get author email address
+    if( count($emails)>0 ) :
+      $out = $emails;
+    endif;
+      
+    // Still here somehow? 
+    return $out;
+  }
+
+  /**
+   * Helper function to get the email addresses of all users who voted on an idea
+   *
+   * @param $nid  Int   The unique identifier for a node.
+   *
+   * @return      Array Array of email addresses keyed by UID
+   */
+  function _idea_engine_admin_ui_return_email_for_voters( $nid ) {
+    // Init
+    $out = FALSE;
+      
+    // Validate the inputs
+    if( !is_int($nid) ) :
+      $nid = (int)$nid;
+    endif;
+    if( !is_int($nid) || $nid < 1 ) :
+      return $out;
+    endif;
+    
+    // Get users by permission
+    $sql = "SELECT users.uid, users.mail
+      FROM users
+        INNER JOIN votingapi_vote USING(uid)
+      WHERE users.status=1
+        AND votingapi_vote.entity_id=".$nid."
+      ORDER BY mail";
+    $result = db_query($sql);
+    
+    // Organize query return
+    $emails = array();
+    foreach( $result as $one_row ) :
+      $emails[ $one_row->uid ] = $one_row->mail;
+    endforeach;
+    
+    // Get author email address
+    if( count($emails)>0 ) :
+      $out = $emails;
+    endif;
+      
+    // Still here somehow? 
+    return $out;
+  }
+
+  /**
+   * Helper function to get the email addresses of all department admins for idea
+   *
+   * @param $nid  Int   The unique identifier for a node.
+   *
+   * @return      Array Array of email addresses keyed by UID
+   */
+  function _idea_engine_admin_ui_return_email_for_dept_admins( $nid ) {
+    // Init
+    $out = FALSE;
+      
+    // Validate the inputs
+    if( !is_int($nid) ) :
+      $nid = (int)$nid;
+    endif;
+    if( !is_int($nid) || $nid < 1 ) :
+      return $out;
+    endif;
+    
+    // Get users who are DA's on this idea
+    $sql = "SELECT users.uid, users.mail
+      FROM users
+        INNER JOIN field_data_field_department_administrator ON users.uid=field_data_field_department_administrator.field_department_administrator_target_id
+        INNER JOIN field_data_field_department ON field_data_field_department_administrator.entity_id=field_data_field_department.field_department_target_id
+      WHERE users.status=1
+        AND field_data_field_department.entity_id=".$nid."
+      ORDER BY mail";
+    $result = db_query($sql);
+    
+    // Organize query return
+    $emails = array();
+    foreach( $result as $one_row ) :
+      $emails[ $one_row->uid ] = $one_row->mail;
+    endforeach;
+    
+    // Get author email address
+    if( count($emails)>0 ) :
+      $out = $emails;
+    endif;
+      
+    // Still here somehow? 
+    return $out;
+  }

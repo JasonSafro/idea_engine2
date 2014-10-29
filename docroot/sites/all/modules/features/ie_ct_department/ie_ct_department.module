@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the IE CT Department feature.
+ */
+
+include_once 'ie_ct_department.features.inc';

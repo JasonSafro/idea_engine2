@@ -1,0 +1,16 @@
+name = IE CT Department
+description = Department Content Type
+core = 7.x
+package = Features
+version = 7.x-1.0
+project = ie_ct_department
+dependencies[] = entityreference
+dependencies[] = features
+dependencies[] = options
+dependencies[] = text
+features[features_api][] = api:2
+features[field_base][] = body
+features[field_base][] = field_department_administrator
+features[field_instance][] = node-department-body
+features[field_instance][] = node-department-field_department_administrator
+features[node][] = department

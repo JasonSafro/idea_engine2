@@ -1,0 +1,14 @@
+name = BigWig Slider
+description = Provides entity functionality as an example to use in your own development projects
+core = 7.x
+
+dependencies[] = entity
+dependencies[] = views
+
+files[] = pe_slider.admin.inc
+files[] = pe_slider_type.admin.inc
+files[] = views/pe_slider.views.inc
+files[] = views/pe_slider_handler_link_field.inc
+files[] = views/pe_slider_handler_delete_link_field.inc
+files[] = views/pe_slider_handler_edit_link_field.inc
+files[] = views/pe_slider_handler_pe_slider_operations_field.inc

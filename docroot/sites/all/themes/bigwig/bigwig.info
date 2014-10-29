@@ -1,0 +1,85 @@
+name = 'BigWig'
+description = 'Drupal 7 starter theme built with Twitter Bootstrap.'
+core = '7.x'
+
+stylesheets[all][] = 'css/entypo-icon-font.css'
+stylesheets[all][] = 'theme/compressed/template.min.css'
+stylesheets[all][] = 'css/slider.css'
+stylesheets[all][] = 'css/color.css'
+stylesheets[all][] = 'css/custom.css'
+stylesheets[all][] = 'css/idea_engine.css'
+
+scripts[] = 'theme/compressed/template.min.js'
+scripts[] = 'js/bigwig.js'
+scripts[] = 'js/idea_engine.js'
+
+regions[header_left] = Header Top Left
+regions[header_right] = Header Top Right
+
+regions[prescript] = Prescript
+
+regions[sidebar_left]  = Left sidebar
+regions[content] = Content
+regions[sidebar_right] = Right sidebar
+
+regions[postscript] = Postscript
+
+regions[footer_first] = Footer First
+regions[footer_second] = Footer Second
+regions[footer_third] = Footer Third
+regions[footer_fourth] = Footer Fourth
+regions[footer_fifth] = Footer Fifth
+regions[footer_sixth] = Footer Sixth
+regions[footer_seventh] = Footer Seventh
+
+settings[header_left_grid] = '5'
+settings[header_left_css] = 'tagline'
+settings[header_right_grid] = '7'
+settings[header_right_css] = ''
+settings[prescript_grid] = ''
+settings[prescript_css] = ''
+settings[sidebar_left_grid] = '3'
+settings[sidebar_left_css] = ''
+settings[content_grid] = ''
+settings[content_css] = ''
+settings[sidebar_right_grid] = '4'
+settings[sidebar_right_css] = 'sidebar'
+settings[postscript_grid] = ''
+settings[postscript_css] = ''
+settings[footer_first_grid] = '3'
+settings[footer_first_css] = 'widget_info'
+settings[footer_second_grid] = '3'
+settings[footer_second_css] = ''
+settings[footer_third_grid] = '3'
+settings[footer_third_css] = ''
+settings[footer_fourth_grid] = '3'
+settings[footer_fourth_css] = ''
+settings[footer_fifth_grid] = '6'
+settings[footer_fifth_css] = 'copyright'
+settings[footer_sixth_grid] = '6'
+settings[footer_sixth_css] = 'text-right'
+settings[footer_seventh_grid] = '12'
+settings[footer_seventh_css] = ''
+settings[default_logo] = '1'
+settings[logo_path] = ''
+settings[logo_upload] = ''
+settings[default_favicon] = '1'
+settings[favicon_path] = ''
+settings[favicon_upload] = ''
+settings[toggle_logo] = '1'
+settings[toggle_name] = '0'
+settings[toggle_slogan] = '0'
+settings[toggle_node_user_picture] = '1'
+settings[toggle_comment_user_picture] = '1'
+settings[toggle_comment_user_verification] = '1'
+settings[toggle_favicon] = '1'
+settings[toggle_main_menu] = '1'
+settings[toggle_secondary_menu] = '0'
+settings[bigwig_use_default_settings] = '0'
+settings[bigwig_current_theme] = 'bigwig'
+settings[layoutColor] = '84bd32'
+settings[responsive] = '1'
+settings[latitude] = '51.50813'
+settings[longitude] = '-0.12801'
+settings[privacy-policy] = 'Don\'t worry, your details are safe with us. For more info. read our <a href="#">privacy policy</a>'
+settings[bigwig_settings__active_tab] = 'edit-layout'

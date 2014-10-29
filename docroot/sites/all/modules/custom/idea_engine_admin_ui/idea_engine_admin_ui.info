@@ -1,0 +1,6 @@
+name = "Idea Engine Admin"
+description = "Admin UI forms and Actions"
+core = "7.x"
+package = "Idea Engine"
+
+dependencies[] = common_functionality

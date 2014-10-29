@@ -1,0 +1,432 @@
+<?php
+
+  /**
+   * Hook form alter()
+   */
+  function idea_forms_form_alter(&$form, &$form_state, $form_id) {
+  //var_dump($form_id); die;
+ // print '<pre>'; var_dump($form['og_group_ref'][LANGUAGE_NONE][0]['default']['#default_value']); die;
+  // print '<pre>'; var_dump($form['field_challenge'][LANGUAGE_NONE][0]['#default_value']); die;
+  // print '<pre>'; var_dump( ($form['#fieldgroups']['group_association']) ); die;
+
+    // Special handling for node forms that can be group content
+    switch( $form_id ) :
+      case 'blog_post_node_form':
+      case 'idea_node_form':
+
+        // Nodes that can be group nodes should automatically pick up the group ref from the query string
+        if( isset($_GET['group_nid']) && !empty($_GET['group_nid']) ) :
+          $form['og_group_ref'][LANGUAGE_NONE][0]['default']['#default_value'] = array( $_GET['group_nid'] );
+        endif;
+
+        // Suppress the field for non-admins
+        if( !user_access(PERM_ADMIN_CONTENT_BETWEEN_GROUPS) ) :
+          $form['og_group_ref'][LANGUAGE_NONE][0]['default']['#access'] = FALSE;
+        endif;
+      break;
+    endswitch;
+    
+    // Special handling for node forms that can be challenge content
+    switch( $form_id ) :
+      case 'idea_node_form':
+
+        // Nodes that can be group nodes should automatically pick up the group ref from the query string
+        if( isset($_GET['challenge_nid']) && !empty($_GET['challenge_nid']) ) :
+          $form['field_challenge'][LANGUAGE_NONE]['#default_value'] = array( $_GET['challenge_nid'] );
+        endif;
+
+        // Suppress the field for non-admins
+        if( !user_access(PERM_ADMIN_CONTENT_BETWEEN_CHALLENGES) ) :
+          $form['field_challenge']['#access'] = FALSE;
+        endif;
+      break;
+    endswitch;
+    
+    // Additional cleanup: hide the fieldgroup
+    if( !user_access(PERM_ADMIN_CONTENT_BETWEEN_GROUPS) && !user_access(PERM_ADMIN_CONTENT_BETWEEN_CHALLENGES) ) :
+      unset($form['#fieldgroups']['group_association']);
+    endif;
+    
+    // General cleanup of node forms
+    switch( $form_id ) :
+      case 'idea_node_form':
+//var_dump( array_keys($form['#groups']) ); die;
+//var_dump( $form['#groups']['group_idea_admin_review'] ); die;
+
+        // Suppress fields for non-admins
+        if( !user_access(PERM_IDEA_ADMIN) ) :
+          $form['field_workflow_state']['#access'] = FALSE;
+          unset($form['#fieldgroups']['group_idea_admin_review']);
+          unset($form['#fieldgroups']['group_idea_rejection']);
+          unset($form['#fieldgroups']['group_implementation']);
+          unset($form['#fieldgroups']['group_reminder_emails']);
+        endif;
+      break;
+    endswitch;
+  }
+
+  // function idea_forms_form_idea_node_form_alter(&$form, &$form_state, $form_id) {
+// //    dsm($form); 
+    
+    // // BEGIN - Set form field defaults
+    // // Don't let users change the workflow state
+    // // $form['field_workflow_state']['#access'] = FALSE; 
+    
+    // // If the user has no groups, show a message
+    
+    // // END - Set form field defaults
+
+    
+    // // BEGIN - Set overrides by role
+    // // if( isset($GLOBALS['user']->roles[RID_ADMIN]) && !empty($GLOBALS['user']->roles[RID_ADMIN]) ) :
+      // // $form['field_workflow_state']['#access'] = TRUE; // Admins are the exception and can change state
+    // // endif;
+    // // END - Set overrides by role  
+  // }
+
+  /**
+   * Implements hook_block_info()
+   */
+  function idea_forms_block_info() {
+    $blocks = array();
+
+    $blocks['idea_admin_review'] = array(
+      'info' => t('Form - Idea Admin Review'),
+      'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+
+    $blocks['dept_admin_review'] = array(
+      'info' => t('Form - Department Admin Review'),
+      'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+    
+    $blocks['reject_idea'] = array(
+      'info' => t('Form - Reject Idea'),
+      'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+
+    return $blocks;
+  }
+  
+  /**
+  * Implements hook_block_view().
+  */
+  function idea_forms_block_view($delta = 'idea_admin_review') {
+    // Initialize $block array empty
+    $block = array();
+    $block['subject'] = t('');
+    $block['content'] = FALSE;
+    
+    // Only show these forms on Idea node pages
+    if( isset($GLOBALS['nodes']['page_node']) && is_object($GLOBALS['nodes']['page_node']) && $GLOBALS['nodes']['page_node']->type == 'idea' ) :
+      switch( $delta ) :
+
+        case 'idea_admin_review':          
+          // Only show form if user has perms AND this idea has not been reviewed
+          if( empty($GLOBALS['nodes']['page_node']->field_reviewed_for_terms_of_use[LANGUAGE_NONE][0]['value']) && user_access(PERM_REVIEW_NEW_IDEAS) ) :
+            $block['subject'] = t('Review Idea');
+            $block['content'] = drupal_get_form( 'idea_forms_idea_admin_review_form' );
+          endif;
+        break;
+      
+        case 'dept_admin_review':
+          // Only show this form if the user has perms AND this idea is under department review
+          if( $GLOBALS['nodes']['page_node']->field_workflow_state[LANGUAGE_NONE][0]['tid'] == TID_IDEA_STATUS_UNDER_DEPARTMENT_REVIEW && user_access(PERM_PLAN_IDEA_IMPLEMENTATION) ) :
+            $block['subject'] = t('Review Idea');
+            $block['content'] = drupal_get_form( 'idea_forms_idea_dept_review_form' );
+          endif;
+        break;
+        
+        case 'reject_idea':
+          // Users can reject ideas at any time if they are have sufficient perms. Otherwise, the idea can only be rejected at specific points in the workflow
+          if(
+            $GLOBALS['nodes']['page_node']->field_workflow_state[LANGUAGE_NONE][0]['tid'] != TID_IDEA_STATUS_REJECTED // Can't reject and idea that is already rejected
+            && (
+              user_access(PERM_IDEA_ADMIN)
+              || ( empty($GLOBALS['nodes']['page_node']->field_reviewed_for_terms_of_use[LANGUAGE_NONE][0]['value']) && user_access(PERM_REVIEW_NEW_IDEAS) )
+              || ( $GLOBALS['nodes']['page_node']->field_workflow_state[LANGUAGE_NONE][0]['tid'] == TID_IDEA_STATUS_UNDER_DEPARTMENT_REVIEW && user_access(PERM_PLAN_IDEA_IMPLEMENTATION) )
+            )
+          ) :
+            $block['subject'] = t('Reject Idea');
+            $block['content'] = drupal_get_form( 'idea_forms_idea_reject_form' );
+          endif;
+        break;
+      
+      endswitch;
+    endif;
+      
+    return $block;
+  }
+
+
+  function idea_forms_idea_admin_review_form($form, &$form_state) {
+      // Get the original node form
+      module_load_include('inc', 'node', 'node.pages');
+      $node_form = drupal_get_form( 'idea_node_form', $GLOBALS['nodes']['page_node'], $GLOBALS['nodes']['page_node'] );
+      
+      //Prep data for form
+      $options['field_department'] = $node_form['field_department'][LANGUAGE_NONE]['#options'];
+      if( isset($options['field_department']['_none']) ) :
+        unset($options['field_department']['_none']);
+      endif;
+      $options['field_reason_for_rejection'] = $node_form['field_reason_for_rejection'][LANGUAGE_NONE]['#options'];
+      if( isset($options['field_reason_for_rejection']['_none']) ) :
+        unset($options['field_reason_for_rejection']['_none']);
+      endif;
+      
+      // BEGIN - Build form elements
+      // Make sure that we have the node NID for processing
+      $form['nid'] = array(
+        '#type' => 'value',
+        '#value' => $GLOBALS['nodes']['page_node']->nid,
+      );
+
+      // Make sure that we have the UID for the reviewer
+      $form['reviewing_uid'] = array(
+        '#type' => 'value',
+        '#value' => $GLOBALS['user']->uid,
+      );
+          
+      // Build pulldown for departments using data from the original node form
+      $form['field_department'] = array(
+        '#type' => 'select',
+        '#title' => t('Department'),
+        '#options' => array('' => 'None') + $options['field_department'],
+        '#default_value' => $node_form['field_department'][LANGUAGE_NONE]['#default_value'],
+      );
+      
+      $form['field_reviewed_for_terms_of_use'] = array(
+        '#type' => 'checkbox',
+        '#title' => 'Reviewed',
+        '#description' => $node_form['field_reviewed_for_terms_of_use'][LANGUAGE_NONE]['#description'],
+      );
+      
+      // Add a submit button
+      $form['approve_submit'] = array(
+        '#validate' => array( 'idea_forms_idea_admin_review_form_validate_approve' ),
+        '#submit' => array( 'idea_forms_idea_admin_review_form_submit_approve' ),
+        '#type' => 'submit', 
+        '#value' => t('Approve Idea'),
+        '#weight' => 99
+      );
+      // END - Build form elements
+    
+    return $form;
+  }
+
+  function idea_forms_idea_admin_review_form_validate_approve($form, &$form_state) {
+    // Must have a department to approve
+    if( empty($form_state['values']['field_department']) ) :
+      form_set_error('field_department', 'You must select a department.');
+    endif;
+
+    // Must review for ToU violations to approve
+    if( empty($form_state['values']['field_reviewed_for_terms_of_use']) ) :
+      form_set_error('field_reviewed_for_terms_of_use', 'You must check that you have reviewed the idea for violations of the Terms of Use.');
+    endif;
+  }
+  
+  function idea_forms_idea_admin_review_form_submit_approve($form, &$form_state) {
+    // Load the node
+    $idea_node = node_load( $form_state['values']['nid'] );
+    
+    // Trap out
+    if( !$idea_node ) :
+      drupal_set_message( 'Failed to load the idea node. Your approval was not recorded.', 'error' );
+    endif;
+    
+    // BEGIN - Update values
+    // Set the approving UID
+    $idea_node->field_admin_review_by[LANGUAGE_NONE][0] = array('target_id' => $form_state['values']['reviewing_uid']);
+    
+    // Save note that idea was reviewed
+    $idea_node->field_reviewed_for_terms_of_use[LANGUAGE_NONE][0] = array('value' => 1);
+    
+    // Set the date that this idea was approved to the current date
+    $idea_node->field_admin_approval_date[LANGUAGE_NONE][0] = _common_functionality_date_to_field( date('Y-m-d H:i:s') );
+    
+    // Set the department
+    $idea_node->field_department[LANGUAGE_NONE][0] = array('target_id' => $form_state['values']['field_department']);
+    // END - Update values
+    
+    // Save the node
+    node_save($idea_node);
+  }
+  
+  
+  function idea_forms_idea_reject_form($form, &$form_state) {
+    // If this is a node page...
+    if( isset($GLOBALS['nodes']['page_node']) && is_object($GLOBALS['nodes']['page_node']) && $GLOBALS['nodes']['page_node']->type == 'idea' ) :
+      // Get the original node form
+      module_load_include('inc', 'node', 'node.pages');
+      $node_form = drupal_get_form( 'idea_node_form', $GLOBALS['nodes']['page_node'], $GLOBALS['nodes']['page_node'] );
+      
+      //Prep data for form
+      $options['field_department'] = $node_form['field_department'][LANGUAGE_NONE]['#options'];
+      if( isset($options['field_department']['_none']) ) :
+        unset($options['field_department']['_none']);
+      endif;
+      $options['field_reason_for_rejection'] = $node_form['field_reason_for_rejection'][LANGUAGE_NONE]['#options'];
+      if( isset($options['field_reason_for_rejection']['_none']) ) :
+        unset($options['field_reason_for_rejection']['_none']);
+      endif;
+      
+      // BEGIN - Build form elements
+      // Make sure that we have the node NID for processing
+      $form['nid'] = array(
+        '#type' => 'value',
+        '#value' => $GLOBALS['nodes']['page_node']->nid,
+      );
+
+      // Make sure that we have the UID for the reviewer
+      $form['reviewing_uid'] = array(
+        '#type' => 'value',
+        '#value' => $GLOBALS['user']->uid,
+      );
+      
+      // Build pulldown for departments using data from the original node form
+      $form['field_reason_for_rejection'] = array(
+        '#type' => 'select',
+        '#title' => t('Reason for rejection'),
+        '#options' => array('' => 'None') + $options['field_reason_for_rejection'],
+        '#default_value' => $node_form['field_reason_for_rejection'][LANGUAGE_NONE]['#default_value'],
+      );
+      
+      $form['field_rejection_notes'] = array(
+        '#type' => 'textarea',
+        '#title' => 'Explanation for rejection',
+        '#description' => $node_form['field_rejection_notes'][LANGUAGE_NONE]['#description'],
+      );
+      
+      // Add a submit button
+      $form['reject_submit'] = array(
+        '#validate' => array( 'idea_forms_idea_reject_form_validate' ),
+        '#submit' => array( 'idea_forms_idea_reject_form_submit' ),
+        '#type' => 'submit', 
+        '#value' => t('Reject Idea'),
+        '#weight' => 99
+      );
+
+
+      // END - Build form elements
+    endif;
+    
+    return $form;
+  }
+
+  
+  function idea_forms_idea_reject_form_validate($form, &$form_state) {
+    // Must provide a reason for rejection
+    if( empty($form_state['values']['field_reason_for_rejection']) ) :
+      form_set_error('field_reason_for_rejection', 'You must provide a reason why you are rejecting this idea.');
+    endif;
+  }
+  
+  function idea_forms_idea_reject_form_submit($form, &$form_state) {
+    // Load the node
+    $idea_node = node_load( $form_state['values']['nid'] );
+    
+    // Trap out
+    if( !$idea_node ) :
+      drupal_set_message( 'Failed to load the idea node. Your approval was not recorded.', 'error' );
+    endif;
+    
+    // BEGIN - Update values
+    $idea_node->field_rejected_by[LANGUAGE_NONE][0] = array('target_id' => $form_state['values']['reviewing_uid']);
+    $idea_node->field_reason_for_rejection[LANGUAGE_NONE][0] = array('tid' => $form_state['values']['field_reason_for_rejection']);
+    $idea_node->field_rejection_notes[LANGUAGE_NONE][0] = array('value' => $form_state['values']['field_rejection_notes']);
+    
+    // Update the workflow status and save
+    _common_functionality_update_idea_node_workflow_status($idea_node, TID_IDEA_STATUS_REJECTED);
+    // END - Update values
+  }
+  
+  function idea_forms_idea_dept_review_form($form, &$form_state) {
+    // If this is a node page...
+    if( isset($GLOBALS['nodes']['page_node']) && is_object($GLOBALS['nodes']['page_node']) && $GLOBALS['nodes']['page_node']->type == 'idea' ) :
+      // Get the original node form
+      module_load_include('inc', 'node', 'node.pages');
+      $node_form = drupal_get_form( 'idea_node_form', $GLOBALS['nodes']['page_node'], $GLOBALS['nodes']['page_node'] );
+
+      // BEGIN - Build form elements
+      // Make sure that we have the node NID for processing
+      $form['nid'] = array(
+        '#type' => 'value',
+        '#value' => $GLOBALS['nodes']['page_node']->nid,
+      );
+      
+      // Build a wrapper for approving options
+      $form['approve_fieldset'] = array(
+        '#type' => 'fieldset',
+        '#title' => t( 'Implement the idea' ),
+      );
+      
+      // Build pulldown for departments using data from the original node form
+      $form['approve_fieldset']['field_implementation_deadline'] = array(
+        '#type' => 'date',
+        '#title' => t('Implementation Deadline'),
+        '#description' => $node_form['field_implementation_deadline'][LANGUAGE_NONE]['#description'],
+      );
+      
+      $form['approve_fieldset']['field_implementation_plan'] = array(
+        '#type' => 'textarea',
+        '#title' => 'Implementation Plan',
+        '#description' => $node_form['field_implementation_plan'][LANGUAGE_NONE]['#description'],
+        '#default_value' => $node_form['field_implementation_plan'][LANGUAGE_NONE][0]['#default_value'],
+      );
+      
+      // Add a submit button
+      $form['approve_fieldset']['approve_submit'] = array(
+        '#validate' => array( 'idea_forms_idea_dept_review_form_validate_approve' ),
+        '#submit' => array( 'idea_forms_idea_dept_review_form_submit_approve' ),
+        '#type' => 'submit', 
+        '#value' => t('Approve Idea'),
+        '#weight' => 99
+      );
+    endif;
+    
+    return $form;
+  }
+  
+  function idea_forms_idea_dept_review_form_validate_approve($form, &$form_state) {
+//var_dump($form_state['values']); die;
+    // Must have an implementation deadline
+    if( 
+      !is_array($form_state['values']['field_implementation_deadline']) 
+      || empty($form_state['values']['field_implementation_deadline']['year']) 
+      || empty($form_state['values']['field_implementation_deadline']['month'])
+      || empty($form_state['values']['field_implementation_deadline']['day'])
+    ) :
+      form_set_error('field_implementation_deadline', 'You must provide a deadline for implementation.');
+    endif;
+
+    // Must provide a plan for implementation
+    if( empty($form_state['values']['field_implementation_plan']) ) :
+      form_set_error('field_implementation_plan', 'You must provide a plan for implementation.');
+    endif;
+  }
+    
+  function idea_forms_idea_dept_review_form_submit_approve($form, &$form_state) {
+    // Load the node
+    $idea_node = node_load( $form_state['values']['nid'] );
+//var_dump($idea_node); die;
+    
+    // Trap out
+    if( !$idea_node ) :
+      drupal_set_message( 'Failed to load the idea node. Your approval was not recorded.', 'error' );
+    endif;
+    
+    // BEGIN - Update values 
+    // Set data fields
+    $date = $form_state['values']['field_implementation_deadline']['year'].'-'.$form_state['values']['field_implementation_deadline']['month'].'-'.$form_state['values']['field_implementation_deadline']['day'];
+    $idea_node->field_implementation_deadline[LANGUAGE_NONE][0] = _common_functionality_date_to_field($date); 
+    $idea_node->field_implementation_plan[LANGUAGE_NONE][0] = array('value' => $form_state['values']['field_implementation_plan']);
+    
+    // Update the workflow status
+    $idea_node->field_workflow_state[LANGUAGE_NONE][0] = array('tid' => TID_IDEA_STATUS_READY_FOR_IMPLEMENTATION);
+    // END - Update values
+    
+    // Save the node
+    node_save($idea_node);
+  }
+  

@@ -1,0 +1,171 @@
+/**
+ * @file
+ * CSS for Field Example.
+ */
+
+body {
+	overflow-x: hidden;
+}
+
+
+.form-item.form-type-managed-file.form-item-field-image-und-1 { display:none; }
+
+table.field-multiple-table tr.draggable .form-type-select,
+table.field-multiple-table tr.draggable .form-type-textfield {
+	float: left;
+	margin-right: 20px;
+	height: 68px;
+}
+
+table.field-multiple-table tr.draggable .form-type-textarea {
+	float: left;
+}
+
+table.field-multiple-table tr.draggable .form-type-textarea textarea {
+	width: 400px;
+	height: 40px;
+}
+
+table.field-multiple-table tr.draggable .form-textarea-wrapper .grippie {
+	display: none;
+}
+
+input.edit-revolution_slider-fields-data-x,
+input.edit-revolution_slider-fields-data-y,
+input.edit-revolution_slider-fields-data-speed,
+input.edit-revolution_slider-fields-data-startafter,
+input.edit-revolution_slider-fields-data-endspeed,
+input.edit-revolution_slider-fields-data-end,
+input.edit-revolution_slider-fields-h-offset,
+input.edit-revolution_slider-fields-v-offset {
+	width: 50px;
+}
+
+input.add-css {
+	width: 405px;
+}
+
+tr.draggable .form-item.form-type-managed-file {
+	float: left;
+	margin-right: 20px;
+}
+
+select.edit-revolution_slider-fields-endeasing {
+	margin-left: 0px;
+	margin-right: 0px;
+}
+
+.slide-builder {
+	width: 100%;
+/* 	background-image: url(preview.png); */
+	overflow-x: scroll;
+	overflow-y: hidden;
+	text-align: center;
+	position: relative;
+	border: 1px solid #bebfb9;
+}
+
+.preview-bg {
+	position: relative;
+	overflow: hidden;
+	margin: 0px auto;
+	outline: 10000px solid rgba(255,255,255,0.3);
+	z-index: 0;
+	-moz-box-shadow: 0px 0px 10px #bbb;
+		-webkit-box-shadow: 0px 0px 10px #bbb;
+			box-shadow: 0px 0px 10px #bbb;
+	-webkit-background-size: cover;
+		-moz-background-size: cover;
+			background-size: cover;
+}
+
+.layer {
+	position: absolute;
+	padding: 10px;
+	margin: 0;
+	z-index: 500;
+	color: #fff;
+}
+
+.layer > h1:hover,
+.layer > h2:hover,
+.layer > h3:hover,
+.layer > h4:hover,
+.layer > h5:hover,
+.layer > h6:hover,
+.layer > img:hover,
+.layer > div:hover {
+	background-image: url(hover.png);
+	cursor: move;
+}
+
+.layer.ui-draggable-dragging > h1,
+.layer.ui-draggable-dragging > h2,
+.layer.ui-draggable-dragging > h3,
+.layer.ui-draggable-dragging > h4,
+.layer.ui-draggable-dragging > h5,
+.layer.ui-draggable-dragging > h6,
+.layer.ui-draggable-dragging > div {
+	cursor: move;
+	outline: 2px solid red;
+}
+
+/* Slide Settings */
+
+.slide-settings {
+	float: left;
+	background: #fff;
+	border: 1px solid #bebfb9;
+	margin-bottom: 20px;
+}
+
+label.slide-widget,
+.slide-builder label {
+	text-transform: uppercase;
+	background: #e1e2dc;
+	font-weight: bold;
+	border-bottom: 1px solid #bebfb9;
+	padding: 3px 5px;
+	text-align: left;
+}
+
+
+.field-type-revolution-slider-slide .form-item {
+	float: left;
+	width: 20%;
+}
+
+.field-type-revolution-slider-slide .slide-settings .form-item {
+	height: 60px;
+}
+
+.slide-settings div.description, .slide-settings .form-item div.description { 
+	float: left;
+	padding-left: 20px;
+}
+
+.field-type-revolution-slider-slide .form-item.form-type-textfield {
+	padding: 10px 0;
+}
+
+.field-type-revolution-slider-slide .form-item label {
+	margin-left: 20px;
+}
+
+.field-type-revolution-slider-slide .form-item input,
+.field-type-revolution-slider-slide .form-item select {
+	float: left;
+	margin-left: 20px;
+}
+
+.field-type-revolution-slider-slide input.form-text {
+	width: 50px;
+}
+
+.field-type-revolution-slider-slide input.edit-revolution_slider-fields-target.form-text {
+	width: 90px;
+}
+
+.field-type-revolution-slider-slide input.edit-revolution_slider-fields-link.form-text {
+	width: 150px;
+}

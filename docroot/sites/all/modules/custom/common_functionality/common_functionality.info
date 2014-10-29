@@ -1,0 +1,6 @@
+name = "Common Functionality"
+description = "Common libraries and other base functionality, settings, etc."
+core = "7.x"
+package = "Idea Engine"
+
+dependencies[] = og

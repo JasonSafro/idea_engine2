@@ -1,0 +1,248 @@
+<?php
+
+  define( 'PATH_IDEA_ENGINE_WORKFLOW_ACTIONS', 'admin/config/idea-engine/workflow-actions' );
+
+  /**
+   * Implements hook_menu().
+   */
+  function workflow_automation_menu() {
+
+    $items = array();
+
+    $items[PATH_IDEA_ENGINE_WORKFLOW_ACTIONS] = array(
+      'title' => 'Idea Engine workflow actions',
+      'page callback' => 'workflow_automation_actions_page',
+      'access callback' => 'user_access',
+      'access arguments' => array(PERM_IDEA_ADMIN),
+    );
+    
+    return $items;
+  }
+  
+  // Settings form for custom Idea Engine settings
+  function workflow_automation_actions_page() {
+    // Run actions triggered in the query string
+    if( isset($_GET['idea_action']) ) :
+      switch( $_GET['idea_action'] ) :
+        case 'update_new_ideas':
+          _workflow_automation_update_new_ideas();
+        break;
+        
+        case 'update_department_ideas':
+          _workflow_automation_update_dept_ideas();
+        break;
+
+        case 'time_changes_for_ideas':
+          _workflow_automation_time_changes_for_ideas();
+        break;
+        
+        default:
+          drupal_set_message('Unknown action: '.check_plain($_GET['idea_action']), 'warning');
+        break;
+      endswitch;
+    endif;
+    
+    $output = '<h3>Select from the following list to trigger an action:</h3>
+    <ul>
+      <li>'.l('Update new ideas',PATH_IDEA_ENGINE_WORKFLOW_ACTIONS, array( 'query' => array('idea_action'=>'update_new_ideas') ) ).'</li>
+      <li>'.l('Update department ideas',PATH_IDEA_ENGINE_WORKFLOW_ACTIONS, array( 'query' => array('idea_action'=>'update_department_ideas') ) ).'</li>
+      <li>'.l('Process time-based events',PATH_IDEA_ENGINE_WORKFLOW_ACTIONS, array( 'query' => array('idea_action'=>'time_changes_for_ideas') ) ).'</li>
+    </ul>';
+
+    return $output;
+  }
+
+  function _workflow_automation_update_new_ideas() {
+    _common_functionality_report_and_log('Beginning automated update of NEW ideas', 'debug', 'workflow_automation');
+  
+    // Query to get the NID's for all active ideas currently open for voting
+    $sql = "SELECT node.nid AS nid
+      FROM {node} node
+        INNER JOIN {field_data_field_workflow_state} field_data_field_workflow_state ON node.nid=field_data_field_workflow_state.entity_id
+      WHERE node.status=1
+        AND node.type='idea'
+        AND field_data_field_workflow_state.field_workflow_state_tid=".TID_IDEA_STATUS_NEW;
+    $result = db_query($sql);
+    
+    // Get and pack the NIDs
+    $new_idea_nids = array();
+    if( $result ) :
+      foreach( $result as $one_idea ) :
+        $new_idea_nids[] = $one_idea->nid;
+      endforeach;
+    endif;
+    
+    // Trap out if none
+    if( count($new_idea_nids)<1 ) :
+        _common_functionality_report_and_log('Exiting automated update of NEW ideas. No new ideas were found.', 'debug', 'workflow_automation');
+      return;
+    endif;
+    
+    // Get the nodes
+    $new_idea_nodes = node_load_multiple($new_idea_nids);
+    
+    // Init variables that will be used repeatedly below
+    // NOTE: 86400 seconds / day
+    $current_timestamp = time();
+    $seconds_until_expiration = 86400*variable_get('idea_voting_period_duration',90);
+    $seconds_until_expiration_warning = 86400*variable_get('idea_days_remaining_for_voting_warning',30);
+// var_dump($seconds_until_expiration);var_dump($seconds_until_expiration_warning); die;
+    
+    // Check each one
+    foreach( $new_idea_nodes as $one_nid => $one_node ) :
+if( $one_nid != 140 ) :
+  continue;
+else :
+
+endif;
+
+      // Only perform tests on ideas approved by the Idea Admin. Unapproved ideas cannot be promoted or expired
+      if( !empty($one_node->field_reviewed_for_terms_of_use[LANGUAGE_NONE][0]['value']) ) :
+     
+        // Get the voting data and see if it passes the thresholds
+        $one_voting_results = fivestar_get_votes('node', $one_nid);
+        if(
+          isset( $one_voting_results['average']['value'] )
+          && $one_voting_results['average']['value'] >= variable_get('idea_vote_average_threshold',80)
+          && isset( $one_voting_results['count']['value'] )
+          && $one_voting_results['count']['value'] >= variable_get('idea_vote_count_threshold',25)
+        ) :
+          // Idea is ready to be promoted
+          _common_functionality_report_and_log( 'Idea '.l($one_node->title, 'node/'.$one_nid).' is ready for department review.', 'debug', 'workflow_automation');
+          
+          // Set promotion data. It will be saved when the workflow status is updated.
+          $one_node->field_sent_to_department_on[LANGUAGE_NONE][0] = _common_functionality_date_to_field( date('Y-m-d') );
+          
+          // Update workflow status and save
+          _common_functionality_update_idea_node_workflow_status($one_node, TID_IDEA_STATUS_UNDER_DEPARTMENT_REVIEW);
+          
+          // A RULE should send the email messages
+          
+          // If we change the status, there's nothing else to do with this node on this run
+          continue;
+        else: 
+          // Check to see if the idea has exceeded the voting window
+          $time_since_approval = $current_timestamp - strtotime( $one_node->field_admin_approval_date[LANGUAGE_NONE][0]['value'] );
+                    
+          if( $time_since_approval > $seconds_until_expiration ) :
+            // Idea is ready to be rejected
+            _common_functionality_report_and_log( 'Idea '.l($one_node->title, 'node/'.$one_nid).' has exceeded the voting window.', 'debug', 'workflow_automation');
+
+            // Set rejection data. It will be saved when workflow status is updated
+            $one_node->field_rejected_by[LANGUAGE_NONE][0] = array('target_id' => 1);
+            $one_node->field_reason_for_rejection[LANGUAGE_NONE][0] = array('tid' => TID_IDEA_REJECTION_INSUFFICIENT_VOTES);
+            $one_node->field_rejection_notes[LANGUAGE_NONE][0] = array('value' => 'Idea did not achieve sufficient votes within the voting window. The idea has been closed by an automated process.');
+            
+            // Update workflow status and save
+            _common_functionality_update_idea_node_workflow_status($one_node, TID_IDEA_STATUS_REJECTED);
+            
+            // A RULE should send the email messages
+          elseif( $time_since_approval > $seconds_until_expiration_warning ) :
+            // Idea needs a reminder
+            _common_functionality_report_and_log( 'Idea '.l($one_node->title, 'node/'.$one_nid).' is ready for a voting reminder email.', 'debug', 'workflow_automation');
+
+            // Clear the Voting Reminder field. There is a rule looking for this change
+            $one_node->field_last_voting_reminder_sent[LANGUAGE_NONE][0]['value'] = 0;
+            
+            // Save updated idea
+            node_save($one_node);
+
+            // A RULE should send the email messages and update the reminder sent date
+          endif;
+        endif;
+      endif;
+    endforeach;
+
+    _common_functionality_report_and_log('Ending automated update of NEW ideas', 'debug', 'workflow_automation');
+  }
+
+  
+  function _workflow_automation_update_dept_ideas() {
+    _common_functionality_report_and_log('Beginning automated update of DEPARTMENT ideas', 'debug', 'workflow_automation');
+  
+    // Query to get the NID's for all active ideas currently open for voting
+    $sql = "SELECT node.nid AS nid
+      FROM {node} node
+        INNER JOIN {field_data_field_workflow_state} field_data_field_workflow_state ON node.nid=field_data_field_workflow_state.entity_id
+      WHERE node.status=1
+        AND node.type='idea'
+        AND field_data_field_workflow_state.field_workflow_state_tid=".TID_IDEA_STATUS_UNDER_DEPARTMENT_REVIEW;
+    $result = db_query($sql);
+    
+    // Get and pack the NIDs
+    $dept_idea_nids = array();
+    if( $result ) :
+      foreach( $result as $one_idea ) :
+        $dept_idea_nids[] = $one_idea->nid;
+      endforeach;
+    endif;
+    
+    // Trap out if none
+    if( count($dept_idea_nids)<1 ) :
+        _common_functionality_report_and_log('Exiting automated update of DEPARTMENT ideas. No department ideas were found.', 'debug', 'workflow_automation');
+      return;
+    endif;
+    
+    // Get the nodes
+    $dept_idea_nodes = node_load_multiple($dept_idea_nids);
+    
+    // Init variables that will be used repeatedly below
+    $current_timestamp = time();
+    $seconds_per_day = 86400;
+    $department_email_interval = $seconds_per_day * variable_get('idea_department_reminder_email_interval',15);
+    
+    // Process each one
+    foreach( $dept_idea_nodes as $one_nid => $one_node ) :
+      // $idea_time_with_department = $current_timestamp - strtotime( $one_node->field_sent_to_department_on[LANGUAGE_NONE][0]['value'] );
+      $idea_time_since_reminder = $current_timestamp - $one_node->field_last_dept_reminder_sent[LANGUAGE_NONE][0]['value'];
+      
+      // If it's been atleast a full interval since the last reminder email
+      if( !empty($one_node->field_last_dept_reminder_sent[LANGUAGE_NONE][0]['value']) && $idea_time_since_reminder > $department_email_interval ) :
+
+        // Idea needs a reminder
+        _common_functionality_report_and_log( 'Idea '.l($one_node->title, 'node/'.$one_nid).' is ready for a department reminder email.', 'debug', 'workflow_automation');
+
+        // Clear the Voting Reminder field. There is a rule looking for this change
+        $one_node->field_last_dept_reminder_sent[LANGUAGE_NONE][0]['value'] = 0;
+        
+        // Save updated idea
+        node_save($one_node);
+
+        // A RULE should send the email messages and update the reminder sent date
+      endif;
+    endforeach;
+
+    _common_functionality_report_and_log('Ending automated update of DEPARTMENT ideas', 'debug', 'workflow_automation');
+  }
+  
+  function _workflow_automation_time_changes_for_ideas() {
+    // Find all ideas that did get get enough votes in time
+    $voting_period_duration = variable_get('idea_voting_period_duration',90) * 24 * 60 * 60; // in seconds
+    $sql = "SELECT node.nid
+      FROM node
+        INNER JOIN field_data_field_workflow_state ON node.nid=field_data_field_workflow_state.entity_id
+      WHERE node.status=1
+        AND node.type='idea'
+        AND field_data_field_workflow_state.field_workflow_state_tid=".TID_IDEA_STATUS_NEW."
+        AND (node.created + ".$voting_period_duration.") <= ".time()."
+    ";
+    $result = db_query($sql);
+    
+    // // Process ideas
+    // if( $result ) :
+      // // Gather all the nids
+      // $all_nids = array();
+      // foreach( $result as $one_result ) :
+        // $all_nids[ $one_result->nid ] = $one_result->nid;
+      // endforeach;
+      
+      // // Gather all the nodes
+      // $all_nodes = node_load_multiple( $all_nids );
+
+      // // Process them one by one
+      // foreach( $all_nodes as $one_nid => $one_node ) :
+        // // Set the 
+      // endforeach;
+    // endif;
+// die;
+  }

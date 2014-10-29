@@ -1,0 +1,6 @@
+name = "Idea Forms"
+description = "A Form API module providing forms for ideas."
+core = "7.x"
+package = "Idea Engine"
+
+dependencies[] = common_functionality

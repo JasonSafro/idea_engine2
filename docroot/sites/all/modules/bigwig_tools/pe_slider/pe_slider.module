@@ -1,0 +1,666 @@
+<?php
+
+require_once dirname(__FILE__) . '/includes/pe_slider.fields.inc';
+
+/**
+ * @file
+ * Module for the PeSlider Entity - a starting point to create your own Entity
+ * and associated administration interface
+ */  
+
+/**
+ * Implement hook_entity_info().
+ *
+ * We define two entities here - the actual entity that will hold our domain
+ * specific information and an entity that holds information about the different
+ * types of entities. See here: http://drupal.org/node/977380 for a discussion on this
+ * choice.
+ */
+
+function pe_slider_entity_info() {
+  $return['pe_slider'] = array(
+    'label' => t('Slide'),
+    // The entity class and controller class extend the classes provided by the
+    // Entity API
+    'entity class' => 'PeSlider',
+    'controller class' => 'PeSliderController',
+    'base table' => 'pe_slider',
+    'fieldable' => TRUE,
+    'entity keys' => array(
+        'id' => 'pe_slider_id',
+        'bundle' => 'type',
+    ),
+    // Bundles are defined by the pe_slider types below
+    'bundles' => array(),
+    // Bundle keys tell the FieldAPI how to extract information from the bundle objects
+    'bundle keys' => array(
+      'bundle' => 'type',
+    ),
+    'label callback' => 'entity_class_label',
+    'uri callback' => 'entity_class_uri',
+    'creation callback' => 'pe_slider_create',
+    'access callback' => 'pe_slider_access',
+    'module' => 'pe_slider',
+    // The information below is used by the PeSliderUIController (which extends the EntityDefaultUIController)
+    'admin ui' => array(
+      'path' => 'admin/content/pe_slider',
+      'file' => 'pe_slider.admin.inc',
+      'controller class' => 'PeSliderUIController',
+      'menu wildcard' => '%pe_slider',
+    ),
+  );
+  // The entity that holds information about the entity types	  
+  $return['pe_slider_type'] = array(
+    'label' => t('BigWig Slider'),
+    'entity class' => 'PeSliderType',
+    'controller class' => 'PeSliderTypeController',
+    'base table' => 'pe_slider_type',
+    'fieldable' => FALSE,
+    'bundle of' => 'pe_slider',
+    'exportable' => TRUE,
+    'entity keys' => array(
+      'id' => 'id',
+      'name' => 'type',
+      'label' => 'label',
+    ),
+    'access callback' => 'pe_slider_type_access',
+    'module' => 'pe_slider',
+    // Enable the entity API's admin UI.
+    'admin ui' => array(
+      'path' => 'admin/structure/pe_slider',
+      'file' => 'pe_slider_type.admin.inc',
+      'controller class' => 'PeSliderTypeUIController',
+    ),
+  );
+
+  return $return;
+}
+
+
+/**
+ * Implements hook_entity_info_alter().
+ *
+ * We are adding the info about the pe_slider types via a hook to avoid a recursion
+ * issue as loading the pe_slider types requires the entity info as well.
+ *
+ * @todo This needs to be improved
+ */
+function pe_slider_entity_info_alter(&$entity_info) {
+  foreach (pe_slider_get_types() as $type => $info) {
+    $entity_info['pe_slider']['bundles'][$type] = array(
+      'label' => $info->label,
+      'admin' => array(
+        'path' => 'admin/structure/pe_slider/manage/%pe_slider_type',
+        'real path' => 'admin/structure/pe_slider/manage/' . $type,
+        'bundle argument' => 4,
+        'access arguments' => array('administer pe_slider types'),
+      ),
+    );
+  }
+}
+  
+
+/**
+ * Implements hook_permission().
+ */
+function pe_slider_permission() {
+  // We set up permisssions to manage entity types, manage all entities and the
+  // permissions for each individual entity
+  $permissions = array(
+    'administer pe_slider types' => array(
+      'title' => t('Administer BigWig Slider types'),
+      'description' => t('Create and delete fields for pe_slider types, and set their permissions.'),
+    ),
+    'administer pe_slider' => array(
+      'title' => t('Administer BigWig Sliders'),
+      'description' => t('Edit and delete all BigWig Sliders'),
+    ),  
+  );
+  
+  //Generate permissions per pe_slider 
+  foreach (pe_slider_get_types() as $type) {
+    $type_name = check_plain($type->type);
+    $permissions += array(
+      "edit any $type_name pe_slider" => array(
+        'title' => t('%type_name: Edit any pe_slider', array('%type_name' => $type->label)),
+      ),
+      "view any $type_name pe_slider" => array(
+        'title' => t('%type_name: View any pe_slider', array('%type_name' => $type->label)),
+      ),
+    );
+  }
+  return $permissions;  
+}
+
+
+/**
+ * Determines whether the given user has access to a pe_slider.
+ *
+ * @param $op
+ *   The operation being performed. One of 'view', 'update', 'create', 'delete'
+ *   or just 'edit' (being the same as 'create' or 'update').
+ * @param $pe_slider
+ *   Optionally a pe_slider or a pe_slider type to check access for. If nothing is
+ *   given, access for all pe_slider is determined.
+ * @param $account
+ *   The user to check for. Leave it to NULL to check for the global user.
+ * @return boolean
+ *   Whether access is allowed or not.
+ */
+function pe_slider_access($op, $pe_slider = NULL, $account = NULL) {
+  if (user_access('administer pe_slider', $account)) {
+    return TRUE;
+  }
+  if (isset($pe_slider) && $type_name = $pe_slider->type) {
+    $op = ($op == 'view') ? 'view' : 'edit';
+    if (user_access("$op any $type_name pe_slider", $account)) {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+
+/**
+ * Access callback for the entity API.
+ */
+function pe_slider_type_access($op, $type = NULL, $account = NULL) {
+  return user_access('administer pe_slider types', $account);
+}
+
+
+/**
+ * Gets an array of all pe_slider types, keyed by the type name.
+ *
+ * @param $type_name
+ *   If set, the type with the given name is returned.
+ * @return PeSliderType[]
+ *   Depending whether $type isset, an array of pe_slider types or a single one.
+ */
+function pe_slider_get_types($type_name = NULL) {
+  // entity_load will get the Entity controller for our pe_slider entity and call the load
+  // function of that object - we are loading entities by name here.
+  $types = entity_load_multiple_by_name('pe_slider_type', isset($type_name) ? array($type_name) : FALSE);
+  return isset($type_name) ? reset($types) : $types;
+}
+
+
+/**
+ * Menu argument loader; Load a pe_slider type by string.
+ *
+ * @param $type
+ *   The machine-readable name of a pe_slider type to load.
+ * @return
+ *   A pe_slider type array or FALSE if $type does not exist.
+ */
+function pe_slider_type_load($type) {
+  return pe_slider_get_types($type);
+}
+
+
+/**
+ * Fetch a pe_slider object. Make sure that the wildcard you choose 
+ * in the pe_slider entity definition fits the function name here.
+ *
+ * @param $pe_slider_id
+ *   Integer specifying the pe_slider id.
+ * @param $reset
+ *   A boolean indicating that the internal cache should be reset.
+ * @return
+ *   A fully-loaded $pe_slider object or FALSE if it cannot be loaded.
+ *
+ * @see pe_slider_load_multiple()
+ */
+function pe_slider_load($pe_slider_id, $reset = FALSE) {
+  $pe_slider = pe_slider_load_multiple(array($pe_slider_id), array(), $reset);
+  return reset($pe_slider);
+}
+
+
+/**
+ * Load multiple pe_slider based on certain conditions.
+ *
+ * @param $pe_slider_ids
+ *   An array of pe_slider IDs.
+ * @param $conditions
+ *   An array of conditions to match against the {pe_slider} table.
+ * @param $reset
+ *   A boolean indicating that the internal cache should be reset.
+ * @return
+ *   An array of pe_slider objects, indexed by pe_slider_id.
+ *
+ * @see entity_load()
+ * @see pe_slider_load()
+ */
+function pe_slider_load_multiple($pe_slider_ids = array(), $conditions = array(), $reset = FALSE) {
+  return entity_load('pe_slider', $pe_slider_ids, $conditions, $reset);
+}
+
+
+/**
+ * Deletes a pe_slider.
+ */
+function pe_slider_delete(PeSlider $pe_slider) {
+  $pe_slider->delete();
+}
+
+
+/**
+ * Delete multiple pe_slider.
+ *
+ * @param $pe_slider_ids
+ *   An array of pe_slider IDs.
+ */
+function pe_slider_delete_multiple(array $pe_slider_ids) {
+  entity_get_controller('pe_slider')->delete($pe_slider_ids);
+}
+
+
+/**
+ * Create a pe_slider object.
+ */
+function pe_slider_create($values = array()) {
+  return entity_get_controller('pe_slider')->create($values);
+}
+
+
+/**
+ * Saves a pe_slider to the database.
+ *
+ * @param $pe_slider
+ *   The pe_slider object.
+ */
+function pe_slider_save(PeSlider $pe_slider) {
+  return $pe_slider->save();
+}
+
+
+/**
+ * Saves a pe_slider type to the db.
+ */
+function pe_slider_type_save(PeSliderType $type) {
+  $type->save();
+}
+
+
+/**
+ * Deletes a pe_slider type from the db.
+ */
+function pe_slider_type_delete(PeSliderType $type) {
+	$type->delete();
+}
+
+
+/**
+ * URI callback for pe_slider
+ */
+function pe_slider_uri(PeSlider $pe_slider){
+  return array(
+    'path' => 'pe_slider/' . $pe_slider->pe_slider_id,
+  );
+}
+
+
+/**
+ * Menu title callback for showing individual entities
+ */
+function pe_slider_page_title(PeSlider $pe_slider){
+  return $pe_slider->name;
+}
+
+
+/**
+ * Sets up content to show an individual pe_slider
+ * @todo - get rid of drupal_set_title();
+ */
+function pe_slider_page_view($pe_slider, $view_mode = 'full') {    
+  $controller = entity_get_controller('pe_slider');  
+  $content = $controller->view(array($pe_slider->pe_slider_id => $pe_slider));
+  drupal_set_title($pe_slider->name);
+  return $content;
+}
+
+
+/**
+ * Implements hook_views_api().
+ */
+function pe_slider_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'pe_slider') . '/views',
+  );
+}
+
+
+/**
+ * Implement hook_theme().
+ */
+function pe_slider_theme() {
+  return array(
+    'pe_slider_add_list' => array(
+      'variables' => array('content' => array()),
+      'file' => 'pe_slider.admin.inc',
+    ),
+    'pe_slider' => array(
+      'render element' => 'elements',
+      'template' => 'pe_slider',
+    ),
+   'pe_slider_sample_data' => array(
+      'variables' => array('pe_slider_sample_data', 'pe_slider' => NULL),
+      'template' => 'pe_slider-sample-data',
+    ),
+
+
+  );
+}  
+
+
+/**
+ * Implements hook_menu_local_tasks_alter().
+ */
+function pe_slider_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  // Add action link 'admin/structure/pe_slider/add' on 'admin/structure/pe_slider'.
+  if ($root_path == 'admin/content/pe_slider') {
+    $item = menu_get_item('admin/content/pe_slider/add');
+    if ($item['access']) {
+      $data['actions']['output'][] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => $item,
+      );
+    }
+  }
+}
+
+
+/**
+ * The class used for pe_slider entities
+ */
+class PeSlider extends Entity {
+  
+  public function __construct($values = array()) {
+    parent::__construct($values, 'pe_slider');
+  }
+
+  protected function defaultLabel() {
+    return $this->name;
+  }
+
+  protected function defaultUri() {
+    return array('path' => 'pe_slider/' . $this->pe_slider_id);
+  }
+  
+  
+}
+
+
+/**
+ * The class used for pe_slider type entities
+ */
+class PeSliderType extends Entity {
+  
+  public $type;
+  public $label;
+  
+  public function __construct($values = array()) {
+    parent::__construct($values, 'pe_slider_type');
+  }
+  
+}
+
+
+/**
+ * The Controller for PeSlider entities
+ */
+class PeSliderController extends EntityAPIController {
+  public function __construct($entityType) {
+    parent::__construct($entityType);
+  }
+
+
+  /**
+   * Create a pe_slider - we first set up the values that are specific
+   * to our pe_slider schema but then also go through the EntityAPIController
+   * function.
+   * 
+   * @param $type
+   *   The machine-readable type of the pe_slider.
+   *
+   * @return
+   *   A pe_slider object with all default fields initialized.
+   */
+  public function create(array $values = array()) {
+    // Add values that are specific to our PeSlider
+    $values += array( 
+      'pe_slider_id' => '',
+      'is_new' => TRUE,
+      'title' => '',
+      'created' => '',
+      'changed' => '',
+      'data' => '',
+    );
+    
+    $pe_slider = parent::create($values);
+    return $pe_slider;
+  }
+  
+  /**
+   * Overriding the buldContent function to add entity specific fields
+   */
+  public function buildContent($entity, $view_mode = 'full', $langcode = NULL, $content = array()) {
+    $content = parent::buildContent($entity, $view_mode, $langcode, $content);
+    $content['pe_slider_sample_data'] =  array(
+      '#markup' => theme('pe_slider_sample_data', array('pe_slider_sample_data' => check_plain($entity->data['sample_data']), 'pe_slider' => $entity)),
+    );
+
+    return $content;
+  }
+  
+}
+
+
+/**
+ * The Controller for PeSlider entities
+ */
+class PeSliderTypeController extends EntityAPIControllerExportable {
+  public function __construct($entityType) {
+    parent::__construct($entityType);
+  }
+  
+   /**
+   * Create a pe_slider type - we first set up the values that are specific
+   * to our pe_slider type schema but then also go through the EntityAPIController
+   * function.
+   * 
+   * @param $type
+   *   The machine-readable type of the pe_slider.
+   *
+   * @return
+   *   A pe_slider type object with all default fields initialized.
+   */
+  public function create(array $values = array()) {
+    // Add values that are specific to our PeSlider
+    $values += array( 
+      'id' => '',
+      'is_new' => TRUE,
+      'data' => '',
+    );
+    $pe_slider_type = parent::create($values);
+    return $pe_slider_type;
+  }
+
+}
+
+
+/**
+ * Implements hook_block_info().
+ */
+function pe_slider_block_info() {
+	$query = new EntityFieldQuery();
+	$query->entityCondition('entity_type', 'pe_slider');
+	$result = $query->execute();
+	$blocks = array();
+	
+	if (isset($result['pe_slider'])) {
+		foreach($result['pe_slider'] as $slider) {
+			$slider_block[] = $result['pe_slider'][$slider->pe_slider_id]->type;
+		}
+			
+		$sliders = array_unique($slider_block, SORT_REGULAR);
+			
+		foreach($sliders as $item) {
+			$slider_id = db_query("SELECT id from pe_slider_type where type = '".$item."'")->fetchAssoc();
+			$label = db_query("SELECT label from pe_slider_type where type = '".$item."'")->fetchAssoc();
+			
+			$blocks['pe_slider_'.$slider_id['id']] = array(
+					// info: The name of the block.
+					'info' => t('BigWig Slider ('.$label['label'].')'),
+					'status' => TRUE,
+					'region' => -1
+			);
+		}
+	}
+	
+	return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function pe_slider_block_view($delta = '') {
+	$query = new EntityFieldQuery();
+	$query->entityCondition('entity_type', 'pe_slider');
+	$result = $query->execute();	
+
+	$blocks = array();
+
+	if (isset($result['pe_slider'])) {
+		$news_items_nids = array_keys($result['pe_slider']);
+		
+		foreach($result['pe_slider'] as $slider) {
+			$slider_block[] = $result['pe_slider'][$slider->pe_slider_id]->type;
+		}
+		
+		/* Generate Slider Markup */
+		$sliders = array_unique($slider_block, SORT_REGULAR);
+		
+		foreach($sliders as $item) {
+
+			$slider = db_query("SELECT id,label,data from pe_slider_type where type = '".$item."'")->fetchAssoc();
+			$slider_id = $slider['id'];
+			$label = $slider['label'];
+			$data = $slider['data'];
+			$groups = unserialize($data);
+			$settings = array_merge((array)$groups['parameters']);
+			$count = count($settings);
+			
+			if($delta == 'pe_slider_'.$slider_id){
+				/* Grab Block Slides */
+				$slide = new EntityFieldQuery();
+				$slide->entityCondition('entity_type', 'pe_slider')
+				->entityCondition('bundle', $item);
+				$slide_results = $slide->execute();
+				$slide_info = array_keys($slide_results['pe_slider']);
+				$slide_items = entity_load('pe_slider', $slide_info);
+				
+				/* Sort Slides by Weight */
+				foreach ($slide_items as $row) {
+					$weight = $slide_items[$row->pe_slider_id]->data['weight'];
+					$order[]  = $weight;
+				}
+				array_multisort($order, SORT_ASC, $slide_items);
+				
+				/* Genereate Block HTML */
+				$layer = array('x', 'y', 'delay', 'duration', 'transition');
+				$css = array('css');
+				$slide_id = '0';
+				$layer_id = '0';
+				
+				$blocks['subject'] = t('BigWig Slider ('.$label.')');
+				
+				if($settings['aspect-ratio'] == 'container') {
+					$blocks['content'] = '<div class="pe-block nomargin peSlider peVolo ratioContainer"';
+				} else {
+					$blocks['content'] = '<div class="pe-block nomargin peSlider peVolo"';
+				}
+				
+				$blocks['content'] .= ($settings['plugin'] == 1) ? ' data-autopause="enabled"' :  ' data-autopause="disabled"';
+				$blocks['content'] .= ' data-plugin='.$settings['plugin'];
+// 				$blocks['content'] .= ' data-transition='.$settings['transition'];
+				
+				/* Fullwidth Settings */
+				if($settings['fullwidth'] == 1){
+					$blocks['content'] .= ($settings['orig-width'] != '940') ? ' data-orig-width="'.$settings['orig-width'].'"' : ' data-orig-width="940"';
+					$blocks['content'] .= ($settings['orig-height'] != '400') ? ' data-orig-height="'.$settings['orig-height'].'"' : ' data-orig-height="400"';
+					
+					if($settings['aspect-ratio'] == 'container') {
+						$blocks['content'] .= ' data-height="'.$settings['orig-height'].','.$settings['aspect-ratio'].',1024"';
+					} else {
+						$blocks['content'] .= ' data-height="0,'.$settings['aspect-ratio'].','.$settings['height'].'"';
+					}
+				}
+				
+				/* Video Settings */
+				if(!empty($settings['video-path'])) {
+					$blocks['content'] .= 'data-video-formats="mp4" ';
+					$blocks['content'] .= 'data-video-loop="enabled" ';
+					$blocks['content'] .= ' data-video-source="'.file_create_url(file_load($settings['video-path'])->uri).'" ';
+					if(!empty($settings['video-fallback'])) {
+						$blocks['content'] .= 'data-video-fallback="'.file_create_url(file_load($settings['video-fallback'])->uri).'"';
+					}
+				}
+				
+				
+				$blocks['content'] .= ' >';
+				
+				foreach($slide_items as $list_item) {
+					
+					$blocks['content'] .= '<div data-delay="'.$slide_items[$slide_id]->data['delay'].'">';
+					
+					if(!$settings['video'] == 1) {
+						$blocks['content'] .= '<img src="'.file_create_url($slide_items[$slide_id]->field_image['und'][0]['uri']).'" data-lazyload="'.file_create_url($slide_items[$slide_id]->field_image['und'][0]['uri']).'" />';
+					}
+					
+					if(!empty($slide_items[$slide_id]->field_layer_settings['und'])) {
+						$blocks['content'] .= '<div class="peCaption">';
+						foreach($slide_items[$slide_id]->field_layer_settings['und'] as $item) {
+							$layerType = $slide_items[$slide_id]->field_layer_settings['und'][$layer_id]['layer'];
+							
+								$blocks['content'] .= '<div';
+							
+							$blocks['content'] .= ' class="peCaptionLayer';
+								
+							foreach($css as $item){
+								$blocks['content'] .= ' '.$slide_items[$slide_id]->field_layer_settings['und'][$layer_id][$item];
+							}
+						
+							$blocks['content'] .= '"';
+							
+							foreach($layer as $item) {
+								$blocks['content'] .= ' data-'.$item.'="'.$slide_items[$slide_id]->field_layer_settings['und'][$layer_id][$item].'"';
+							}
+							
+							if($layerType == 'img') {
+								$blocks['content'] .= '><img src="'.file_create_url(file_load($slide_items[$slide_id]->field_layer_settings['und'][$layer_id]['img'])->uri).'"/></div>';
+							} else {
+								$blocks['content'] .= '>'.$slide_items[$slide_id]->field_layer_settings['und'][$layer_id]['markup'];
+								$blocks['content'] .= '</'.$layerType.'>';
+							}
+							
+							$layer_id++;
+						}
+						$blocks['content'] .= '</div>';
+						$layer_id = 0;
+					}
+					$slide_id++;
+					$blocks['content'] .= '</div>';
+				}
+						
+				$blocks['content'] .= '</div>';
+				
+			}
+			
+		}
+		
+	}
+	return $blocks;
+}

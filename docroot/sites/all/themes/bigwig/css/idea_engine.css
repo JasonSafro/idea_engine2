@@ -1,0 +1,459 @@
+/* BEGIN general styles */
+table.views-table {
+  width: 100%;
+}
+
+table.views-table tr.even,
+#block-node-recent table tr.even {
+  background-color: #dddddd;
+}
+
+.contentBox h3 { color: white; }
+.contentBox a { color: white; }
+.contentBox p { color: #eeeeee; }
+
+.hero-unit {
+  padding: 20px;
+}
+
+.hero-unit p {
+  margin-bottom: 5px;
+}
+
+.hero-unit header {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 28px;
+}
+
+.hero-unit p.small {
+  font-size: 50%;
+  line-height: 110%;
+}
+
+.hero-unit .field .field-label {
+  font-size: 16px;
+}
+
+.hero-unit .field .field-item p,
+.hero-unit .field-type-entityreference .field-item,
+.hero-unit .field-type-datetime .field-item,
+.hero-unit .field-type-taxonomy-term-reference .field-item {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 28px;
+}
+
+li a.btn {
+  margin-bottom: 5px;
+}
+
+.field-type-file .field-items,
+.field-type-file .field-item span.file,
+.field-type-file .field-item span.file a {
+  height: 20px;
+  width: 300px;
+}
+
+.field-type-file .field-item {
+  position: relative;
+}
+
+.field-type-file .field-item span.file img {
+  left: 0px;
+  position: absolute;
+  top: 0px;
+  
+  height: 16px;
+  width: 16px;
+}
+
+.field-type-file .field-item span.file a {
+  left: 20px;
+  position: absolute;
+  top: -9px;
+}
+/* END general styles */
+
+
+/* BEGIN countdown timer styles */
+
+
+/* END countdown timer styles */
+
+/* BEGIN profile page styles */
+body.page-user div.profile div.field-name-og-user-node div.field-label {
+  color: #999;
+  font-size: 30px;
+  line-height: 30px;
+  font-weight: 300;
+}
+
+body.page-user div.profile h3 { display: none; }
+body.page-user div.profile dl { display: none; }
+/* END profile page styles */
+
+/* BEGIN header */
+#name-and-slogan #site-name a span {
+  font-size: 350%;
+}
+
+div.menu-bar div.logo {
+  position: relative;
+}
+
+div.menu-bar div.logo div#name-and-slogan {
+  left: 55px;
+  position: absolute;
+  top: 15px;
+}
+
+ul.header-actions {
+  text-align: right;
+}
+
+ul.header-actions li {
+  display: inline;
+}
+
+div.header-right #block-common-functionality-header-user-bar {
+  text-align: right;
+}
+/* END header */
+
+
+/* BEGIN General Table styles */
+table.views-table tr th, 
+table.views-table tr td {
+  padding-right: 10px;
+}
+
+table.views-table tr td {
+  vertical-align: middle;
+}
+
+table.views-table tr th p, 
+table.views-table tr td p {
+  margin-bottom: 0px;
+}
+/* END General Table styles */
+
+
+/* BEGIN comment styles */
+div#comments div.comment {
+  border-bottom: 1px solid black;
+  margin-bottom: 25px;
+}
+
+div#comments div.comment h3 {
+  margin-bottom: 5px;
+}
+
+div#comments div.comment div.submitted {
+  margin-bottom: 25px;
+}
+
+div#comments div.comment div.submitted a.permalink {
+  display: none;
+}
+
+div#comments div.comment ul.inline li {
+  display: inline;
+}
+
+div#comments div.comment span.new {
+  color: #da4f49;
+  font-weight: bold;
+}
+/* END comment styles */
+
+
+/* BEGIN form styles */
+form label {
+  font-size: 125%;
+}
+
+form div.form-wrapper div.description {
+  margin-bottom: 25px;
+}
+
+body.user-cannot-choose-text-format div.field-type-text-with-summary .filter-wrapper,
+body.user-cannot-choose-text-format div.field-type-text-long .filter-wrapper {
+  display: none;
+}
+#edit-field-group-status {
+  margin-bottom: 15px;
+}
+
+#edit-field-group-status .form-type-radio,
+#edit-group-access .form-type-radio {
+  position: relative;
+  margin-bottom: 5px;
+}
+
+#edit-field-group-status .form-type-radio label,
+#edit-group-access .form-type-radio label {
+  left: 15px;
+  position: absolute;
+  top: 3px;
+}
+
+
+#edit-field-portfolio-tags div.form-type-checkbox,
+#idea-forms-idea-admin-review-form div.form-item-field-reviewed-for-terms-of-use {
+  margin-bottom: 5px;
+  position: relative;
+}
+
+#edit-field-portfolio-tags div.form-type-checkbox label,
+#idea-forms-idea-admin-review-form div.form-item-field-reviewed-for-terms-of-use label {
+  left: 15px;
+  position: absolute;
+  top: 2px;
+}
+
+.node-idea-form div#body-add-more-wrapper div.text-summary-wrapper,
+.node-idea-form div#body-add-more-wrapper div.text-summary-wrapper div.form-item-body-und-0-summary,
+.node-idea-form div#body-add-more-wrapper div.text-summary-wrapper label { 
+  display:none;
+  height: 0px;
+  width: 0px;
+}
+/* END form styles */
+
+
+/* BEGIN block styles */
+.sidebar div.block h2 {
+  margin-bottom: 5px !important;
+}
+
+.sidebar .block-idea-forms {
+  /*float: left;
+  width: 102px;
+  height: 138px;
+  padding-left: 36px;*/
+  padding: 10px;
+  background: rgb(244,244,244);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,.1)), to(rgba(0,0,0,.07)));
+  background-image: -webkit-linear-gradient(top, rgba(255,255,255,.1), rgba(0,0,0,.07));
+  background-image: -moz-linear-gradient(top, rgba(255,255,255,.1), rgba(0,0,0,.07));
+  background-image: -ms-linear-gradient(top, rgba(255,255,255,.1), rgba(0,0,0,.07));
+  background-image: -o-linear-gradient(top, rgba(255,255,255,.1), rgba(0,0,0,.07));
+  background-image: linear-gradient(top, rgba(255,255,255,.1), rgba(0,0,0,.07));
+  border: 1px solid #ccc;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  -moz-box-shadow:
+      0 2px 3px 0 rgba(255,255,255,.2) inset,
+      0 2px 2px 0 rgba(0,0,0,.1);
+  -webkit-box-shadow:
+      0 2px 3px 0 rgba(255,255,255,.2) inset,
+      0 2px 2px 0 rgba(0,0,0,.1);
+  box-shadow:
+      0 2px 3px 0 rgba(255,255,255,.2) inset,
+      0 2px 2px 0 rgba(0,0,0,.1);
+}
+
+div.sidebar #block-node-recent table {
+  width: 100%;
+}
+
+div.sidebar #block-node-recent td.title-author div.node-author,
+div.sidebar #block-node-recent td.edit,
+div.sidebar #block-node-recent td.delete {
+  display: none;
+}
+
+div.sidebar #block-node-recent td.title-author span.marker {
+  color: #da4f49;
+  font-weight: bold;
+}
+
+div.sidebar #block-node-recent div.more-link {
+  text-align: right;
+}
+
+div.sidebar #block-node-recent div.more-link a {
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-top-colors: none;
+  border-image: none;
+  border-radius: 4px;
+  border-style: solid;
+  border-width: 1px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  display: inline-block;
+  font-size: 14px;
+  line-height: 20px;
+  margin-bottom: 0;
+  margin-top: 2px;
+  padding: 2px 6px;
+  text-align: center;
+  vertical-align: middle;
+
+  background-color: #da4f49;
+  background-image: linear-gradient(to bottom, #ee5f5b, #bd362f);
+  background-repeat: repeat-x;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  color: #fff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+#block-common-functionality-add-content-menu section {
+  margin-bottom: 10px;
+}
+
+#block-common-functionality-add-content-menu section ul {
+  margin-left: 10px;
+}
+/* END block styles */
+
+
+/* BEGIN challenge node styles */
+.contentBox-group-status-challenge-archived {
+  background-color: #d73300;
+}
+/* END challenge node styles */
+
+
+/* BEGIN idea node styles */
+div.dashboard-header-container,
+body.node-type-idea div.workflow-state-container {
+  position: relative;
+  
+  height: auto;
+  width: auto;
+  
+  margin-bottom: 25px;
+}
+
+div.dashboard-header-container div.dashboard-header-overlay,
+body.node-type-idea div.workflow-state-container div.workflow-state-overlay {
+  left: 0px;
+  position: absolute;
+  top: 0px;
+ 
+  height: 100%;
+  width: 100%;
+}
+
+div.dashboard-header-container div.dashboard-header-overlay-background,
+body.node-type-idea div.workflow-state-container div.workflow-state-overlay-background {
+  background-color: #000000;
+  opacity: 0.5;
+  filter: alpha(opacity=50);
+}
+
+div.dashboard-header-container div.dashboard-header-overlay-text,
+body.node-type-idea div.workflow-state-container div.workflow-state-overlay-text {
+  color: white;
+  padding: 5px;
+}
+
+div.dashboard-header-container div.dashboard-header-overlay-text div.idea-title-container,
+body.node-type-idea div.workflow-state-container div.workflow-state-overlay-text div.idea-title-container {
+  left: 10px;
+  position: absolute;
+  top: 10px;
+}
+
+div.dashboard-header-container div.dashboard-header-overlay-text div.idea-title-container h3,
+body.node-type-idea div.workflow-state-container div.workflow-state-overlay-text div.idea-title-container h3 {
+  color: white;
+  font-size: 200%;
+  margin-bottom: 5px;
+}
+
+div.dashboard-header-container div.dashboard-header-overlay-text div.dashboard-header-label-container,
+body.node-type-idea div.workflow-state-container div.workflow-state-overlay-text div.workflow-state-label-container {
+  bottom: 15px;
+  position: absolute;
+  right: 20px;
+  
+  text-align: right;
+}
+
+div.dashboard-header-container div.dashboard-header-overlay-text div.dashboard-header-label-container h4,
+div.dashboard-header-container div.dashboard-header-overlay-text div.dashboard-header-label-container p,
+body.node-type-idea div.workflow-state-container div.workflow-state-overlay-text div.workflow-state-label-container h4,
+body.node-type-idea div.workflow-state-container div.workflow-state-overlay-text div.workflow-state-label-container p {
+  color: white;
+  margin-bottom: 0px;
+}
+
+.contentBox-needs-votes h3 {
+  margin-bottom: 2px;
+}
+
+.contentBox-needs-votes p {
+  margin-bottom: 10px;
+}
+
+.contentBox-needs-votes form {
+  margin-bottom: 0px;
+}
+
+.hero-unit-approval header h3 {
+  margin-bottom: 0px;
+}
+/* END idea node styles */
+
+
+/* BEGIN user_group node styles */
+body.node-type-user-group div.field-type-image {
+  margin-bottom: 20px;
+}
+
+body.node-type-user-group  div.contentBox-group-access h3 {
+  color: white;
+  margin-bottom: 5px;
+}
+
+body.node-type-user-group div.hero-unit {
+  padding: 20px;
+}
+/* END user_group node styles */
+
+
+/* BEGIN views styles */
+div.view-bigwig-taxonomy div.view-header p {
+  margin-bottom: 0px;
+}
+
+div.view-bigwig-taxonomy div.view-content ul.peIsotopeFilter {
+  margin-top: 0px;
+}
+
+div.view-bigwig-portfolio div.archive-challenge-message {
+  font-size: 12px;
+}
+
+div.view-ideas-for-ticker div.view-content {
+  height: 50px;
+}
+
+div.view-ideas-for-ticker div.views-row {
+  display: none;
+}
+
+div.view-ideas-for-ticker div.views-row-first {
+  display: block;
+}
+
+div.view-ideas-for-ticker div.views-row div.views-field {
+  display: inline-block;
+}
+
+div.view-search-groups .view-header .hero-unit h3 {
+  margin-bottom: 5px;
+  margin-top: 25px;
+}
+
+div.views-exposed-form .views-submit-button input.form-submit {
+  position: relative;
+  top: 3px;
+}
+/* END views styles */

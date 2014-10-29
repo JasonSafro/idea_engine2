@@ -1,0 +1,170 @@
+<?php
+
+/**
+ * @file
+ * Sets up the base table for our entity and a table to store information about
+ * the entity types.
+ */
+
+
+/**
+ * Implements hook_schema().
+ */
+function pe_slider_schema() {
+  $schema = array();
+
+  $schema['pe_slider'] = array(
+    'description' => 'The base table for pe_slider entities.',
+    'fields' => array(
+      'pe_slider_id' => array(
+        'description' => 'Primary Key: Identifier for a pe_slider.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => 'The {pe_slider_type}.type of this pe_slider.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'language' => array(
+        'description' => 'The language of the pe_slider.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'name' => array(
+        'description' => 'The name of the pe_slider - a human-readable identifier.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the pe_slider was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the pe_slider was most recently saved.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'data' => array(
+        'type' => 'blob',
+        'not null' => FALSE,
+        'size' => 'big',
+        'serialize' => TRUE,
+        'description' => 'A serialized array of additional data.',
+      ),
+    ),
+    'primary key' => array('pe_slider_id'),
+    'indexes' => array(
+      'type' => array('type'),
+    ),
+  );
+
+  $schema['pe_slider_type'] = array(
+    'description' => 'Stores information about defined pe_slider types.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique pe_slider type identifier.',
+      ),
+      'type' => array(
+        'description' => 'The machine-readable name of this pe_slider type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'label' => array(
+        'description' => 'The human-readable name of this pe_slider type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny',
+        'description' => 'The weight of this pe_slider type in relation to others.',
+      ),
+      'data' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'serialize' => TRUE,
+        'description' => 'A serialized array of additional data related to this pe_slider type.',
+      ),
+    ) + entity_exportable_schema_fields(),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'type' => array('type'),
+    ),
+  );
+
+  return $schema;
+}
+
+function pe_slider_field_schema($field) {
+	switch($field['type']) {
+	    case 'pe_slider_layer':
+	      $columns = array(
+	        'layer' => array(
+	          'type' => 'varchar',
+	          'length' => '128',
+	          'not null' => FALSE,
+	        ),
+	        'transition' => array(
+	          'type' => 'varchar',
+	          'length' => '128',
+	          'not null' => FALSE,
+	        ),
+	        'duration' => array(
+	          'type' => 'text',
+	          'not null' => FALSE,
+	        ),
+	        'delay' => array(
+	          'type' => 'text',
+	          'not null' => FALSE,
+	        ),
+	        'x' => array(
+	          'type' => 'text',
+	          'not null' => FALSE,
+	        ),
+	        'y' => array(
+	          'type' => 'text',
+	          'not null' => FALSE,
+	        ),
+			'img' => array(
+	        	'type' => 'int',
+	        	'not null' => FALSE,
+	        	'unsigned' => TRUE,
+	      	),
+	      	'markup' => array(
+      			'type' => 'text',
+      			'not null' => FALSE,
+	      	),
+	      	'css' => array(
+      			'type' => 'text',
+      			'not null' => FALSE,
+	      	),
+	      );
+	      $indexes = array(
+
+	      );
+	      break;
+		}
+  return array(
+    'columns' => $columns,
+    'indexes' => $indexes,
+  );
+}

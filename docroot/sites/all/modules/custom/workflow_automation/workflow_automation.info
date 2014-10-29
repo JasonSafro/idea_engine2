@@ -1,0 +1,6 @@
+name = "Workflow Automation"
+description = "Automated tests and transitions for the idea workflows."
+core = "7.x"
+package = "Idea Engine"
+
+dependencies[] = common_functionality

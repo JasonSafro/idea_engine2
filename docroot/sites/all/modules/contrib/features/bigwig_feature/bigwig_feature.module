@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the BigWig: Features feature.
+ */
+
+include_once 'bigwig_feature.features.inc';

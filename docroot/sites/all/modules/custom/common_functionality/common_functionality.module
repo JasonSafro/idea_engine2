@@ -1,0 +1,499 @@
+<?php
+
+  // Define role constants
+  define( 'RID_ADMIN', 1 );
+  define( 'RID_IDEA_ADMIN', 4 );
+  define( 'RID_DEPARTMENT_ADMIN', 5 );
+
+  // // Define permission constants
+  define( 'PERM_VIEW_HTML_DEBUG', 'View HTML debug comments' );
+  define( 'PERM_ADMIN_CONTENT_BETWEEN_CHALLENGES', 'Admin content between challenges' );
+  define( 'PERM_ADMIN_CONTENT_BETWEEN_GROUPS', 'Admin content between groups' );
+  define( 'PERM_IDEA_ADMIN', 'Administrate ideas' );
+  define( 'PERM_REVIEW_NEW_IDEAS', 'Review new ideas for Terms of Use violations' );
+  define( 'PERM_PLAN_IDEA_IMPLEMENTATION', 'Plan how to implement ideas' );
+  
+  // Term constants
+  define( 'TID_GROUP_STATUS_ACTIVE', 20 );
+  define( 'TID_GROUP_STATUS_ARCHIVE', 21 );
+  define( 'TID_IDEA_STATUS_NEW', 16 );
+  define( 'TID_IDEA_STATUS_READY_FOR_IMPLEMENTATION', 17 );
+  define( 'TID_IDEA_STATUS_REJECTED', 18 );
+  define( 'TID_IDEA_STATUS_UNDER_DEPARTMENT_REVIEW', 19 );
+  define( 'TID_IDEA_REJECTION_TOU_VIOLATION', 22 );
+  define( 'TID_IDEA_REJECTION_IDEA_ADMIN', 26 );
+  define( 'TID_IDEA_REJECTION_INSUFFICIENT_VOTES', 25 );
+  define( 'TID_IDEA_REJECTION_DEPARTMENT', 24 );
+  define( 'TID_IDEA_REJECTION_OTHER', 23 );
+
+  function common_functionality_permission() {
+    return array(
+      PERM_VIEW_HTML_DEBUG => array(
+        'title' => t(PERM_VIEW_HTML_DEBUG),
+        'description' => t('View debug comments in HTML'),
+      ),
+      PERM_ADMIN_CONTENT_BETWEEN_CHALLENGES => array(
+        'title' => t(PERM_ADMIN_CONTENT_BETWEEN_CHALLENGES),
+        'description' => t('Control content across all challenges'),
+      ),
+      PERM_ADMIN_CONTENT_BETWEEN_GROUPS => array(
+        'title' => t(PERM_ADMIN_CONTENT_BETWEEN_GROUPS),
+        'description' => t('Control group content across all groups'),
+      ),
+      PERM_IDEA_ADMIN => array(
+        'title' => t(PERM_IDEA_ADMIN),
+        'description' => t('Administer ideas'),
+      ),
+      PERM_REVIEW_NEW_IDEAS => array(
+        'title' => t(PERM_REVIEW_NEW_IDEAS),
+        'description' => t('Review new ideas for violations of the Terms of Use'),
+      ),
+      PERM_PLAN_IDEA_IMPLEMENTATION => array(
+        'title' => t(PERM_PLAN_IDEA_IMPLEMENTATION),
+        'description' => t('Plan how to implement ideas'),
+      ),      
+    );
+  } 
+  
+  function common_functionality_init() {
+    // Get page node, if any, and put it into $GLOBALS
+    $page_node = menu_get_object();
+    if( is_object($page_node) && !empty($page_node->type) ) :
+      $GLOBALS['nodes']['page_node'] = $page_node;
+
+      // If this node IS a group, or belongs to a group, store that group node too
+      $GLOBALS['nodes']['group'] = NULL;
+      switch( $page_node->type ) :
+        case 'challenge':
+          $GLOBALS['nodes']['challenge'] = $page_node;
+        break;
+        
+        case 'user_group':
+          $GLOBALS['nodes']['group'] = $page_node;
+        break;
+        
+        case 'blog_post':
+        case 'idea':
+          if( isset($page_node->og_group_ref[LANGUAGE_NONE][0]['target_id']) && !empty($page_node->og_group_ref[LANGUAGE_NONE][0]['target_id']) ) :
+            if( $group_node = node_load( $page_node->og_group_ref[LANGUAGE_NONE][0]['target_id'] ) ) :
+              $GLOBALS['nodes']['group'] = $group_node;
+            endif;
+          endif;
+          
+          if( isset($page_node->field_challenge[LANGUAGE_NONE][0]['target_id']) && !empty($page_node->field_challenge[LANGUAGE_NONE][0]['target_id']) ) :
+            if( $challenge_node = node_load( $page_node->field_challenge[LANGUAGE_NONE][0]['target_id'] ) ) :
+              $GLOBALS['nodes']['challenge'] = $challenge_node;
+            endif;
+          endif;
+        break;
+      endswitch;
+    endif;
+  }
+  
+  /**
+   * Implements hook_block_info()
+   */
+  function common_functionality_block_info() {
+    $blocks = array();
+
+    $blocks['add_content_menu'] = array(
+      'info' => t('Menu - Add content'),
+      'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+
+    $blocks['idea_engine_stats'] = array(
+      'info' => t('Idea Engine - Statistics'),
+      'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+    
+    $blocks['header_user_bar'] = array(
+      'info' => t('Header - User Bar'),
+      'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+
+    $blocks['dashboard_header'] = array(
+      'info' => t('Dashboard - Header'),
+      'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+    
+    return $blocks;
+  }
+
+  /**
+  * Implements hook_block_view().
+  */
+  function common_functionality_block_view($delta = 'add_content_menu') {
+    $block = array();
+
+    switch( $delta ) :
+
+      case 'add_content_menu':
+        $block['subject'] = t('Contribute');
+        $block['content'] = _common_functionality_group_add_content_menu_html();
+      break;
+
+      case 'idea_engine_stats':
+        $block['subject'] = t('');
+        $block['content'] = _common_functionality_idea_engine_stats_html();
+      break;
+      
+      case 'header_user_bar':
+        $block['subject'] = t('');
+        $block['content'] = _common_functionality_group_header_user_bar_html();
+      break;
+      
+      case 'dashboard_header':
+        $block['subject'] = t('');
+        $block['content'] = _common_functionality_dashboard_header_html();
+      break;
+      
+    endswitch;
+
+    return $block;
+  }
+
+  function common_functionality_admin_comment( $text ) {
+    if( user_access(PERM_VIEW_HTML_DEBUG) ) :
+      return '<!-- '.$text.' -->'."\n";
+    else :
+      return '';
+    endif;
+  }
+  
+  function _common_functionality_group_add_content_menu_html() {
+    // Init output var
+    $out = '';
+    
+    // Trap out for anonymous user
+    if( !user_is_logged_in() ) :
+      $out.= 'You must '.l('login', 'user/login').' to contribute to '.variable_get('site_name', "Default site name").'.';
+      return $out;
+    endif;
+    
+    // Init vars for processing
+    $content_types = array( 
+      // 'blog_post' => array(
+        // 'label' => 'Blog Post',
+        // 'path' => 'node/add/blog-post',
+        // 'can_be_group_content' => TRUE,
+        // 'can_be_challenge_content' => FALSE,
+      // ),
+      'challenge' => array(
+        'label' => 'Challenge',
+        'path' => 'node/add/challenge',
+        'can_be_group_content' => FALSE,
+        'can_be_challenge_content' => FALSE,
+      ),
+      'idea' => array(
+        'label' => 'Idea',
+        'path' => 'node/add/idea',
+        'can_be_group_content' => TRUE,
+        'can_be_challenge_content' => TRUE,
+      ),
+      'user_group' => array(
+        'label' => 'Group',
+        'path' => 'node/add/user-group',
+        'can_be_group_content' => FALSE,
+        'can_be_challenge_content' => FALSE,
+      ),
+    );
+
+    $links = array(
+      'general' => array(),
+      'challenge_specific' => array(),
+      'group_specific' => array(),
+    );
+    
+   // Try to add special links for group
+    if( isset($GLOBALS['nodes']['group']) && is_object($GLOBALS['nodes']['group']) ) :
+    
+      // Build the links
+      if( !og_is_member('node',$GLOBALS['nodes']['group']->nid) ) :
+        $join_link_options = array(
+          'attributes' => array(
+            'class' => array(
+              'btn',
+              'btn-danger',
+            )
+          )
+        );                   
+        $links['group_specific'][] = l( 'Join the group', 'group/node/'.$GLOBALS['nodes']['group']->nid.'/subscribe/og_user_node', $join_link_options ); 
+      else :
+        foreach( $content_types as $one_type_name => $one_type ) :
+          if( !$one_type['can_be_group_content'] ) :
+            continue;
+          elseif( !og_user_access('node', $GLOBALS['nodes']['group']->nid, 'create '.$one_type_name.' content') ) :
+            continue;
+          else :
+            $options = array( 
+              'query' => array( 'group_nid' => $GLOBALS['nodes']['group']->nid ),
+              'attributes' => array( 'class' => array( 'btn', 'btn-primary') )
+            );
+            $links['group_specific'][] = l('Share a new '.$one_type['label'].' with the group', 'node/add/'.$one_type_name, $options);
+          endif;
+        endforeach;
+      endif;
+      
+      // Build the HTML wrapper for the links
+      $out.= '
+<section>
+  <header>Group: '.$GLOBALS['nodes']['group']->title.'</header>
+  <ul>
+    <li>'.implode('</li><li>', $links['group_specific']).'</li>
+  </ul>
+</section>';
+    endif;
+    
+    
+    // Try to add special links for challenge
+    if( isset($GLOBALS['nodes']['challenge']) && is_object($GLOBALS['nodes']['challenge']) ) :
+      // Build the links
+      if( $GLOBALS['nodes']['challenge']->field_group_status[LANGUAGE_NONE][0]['tid'] == TID_GROUP_STATUS_ACTIVE ) :
+        foreach( $content_types as $one_type_name => $one_type ) :
+          if( !$one_type['can_be_challenge_content'] ) :
+            continue;
+          else :
+            $options = array( 
+              'query' => array( 'challenge_nid' => $GLOBALS['nodes']['challenge']->nid ),
+              'attributes' => array( 'class' => array( 'btn', 'btn-primary') )
+            );
+            $links['challenge_specific'][] = l('Answer the challenge', 'node/add/'.$one_type_name, $options);
+          endif;
+        endforeach;
+      else :
+        $links['challenge_specific'][] = 'Submission is closed for this challenge.';
+      endif;
+        
+      // Build the HTML wrapper for the links
+      $out.= '
+<section>
+  <header>Challenge: '.$GLOBALS['nodes']['challenge']->title.'</header>
+  <ul>
+    <li>'.implode('</li><li>', $links['challenge_specific']).'</li>
+  </ul>
+</section>';
+    endif;
+
+    
+    // Process standard output
+    foreach( $content_types as $one_type_name => $one_type ) :
+      // Trap out for permissions
+      if( !user_access('create '.$one_type_name.' content') ) :
+        continue;
+      endif;
+    
+      // Create link to add a new node of this type, unassociated to any other content
+      $options = array( 
+        'attributes' => array( 'class' => array( 'btn', 'btn-primary') )
+      );
+      $links['general'][] = l('Create a new '.$one_type['label'], $one_type['path'], $options);
+    endforeach;
+    
+ 
+      
+      // // Create link to add this content to the group
+      // if( $one_type['can_be_group_content'] && isset($GLOBALS['nodes']['group']) ) :
+        // if( !og_is_member('node',$GLOBALS['nodes']['group']->nid) ) :
+          // $links['node_specific'][] = l('Join the group', 'group/node/'.$GLOBALS['nodes']['group']->nid.'/subscribe/og_user_node').' to contribute '.$one_type['label'].' content';
+        // elseif( !og_user_access('node', $GLOBALS['nodes']['group']->nid, 'create '.$one_type_name.' content') ) :
+          // // Do nothing
+        // else :
+          // $options = array( 'query' => array( 'group_nid' => $GLOBALS['nodes']['group']->nid ) );
+          // $links['node_specific'][] = l('Share a new '.$one_type['label'].' with the group', 'node/add/'.$one_type_name, $options);
+        // endif;
+      // endif;
+      
+      // // // Conditionally create a new node tied to another node, like an Idea that answers a Challenge
+      // // if( isset($GLOBALS['nodes']['page_node']->type) ) : 
+        // // switch( $GLOBALS['nodes']['page_node']->type ) : 
+          // // case 'challenge':
+            // // if( $one_type['challenge'] ) :
+              // // $options = array( 'query' => array( 'challenge_nid' => $GLOBALS['nodes']['page_node']->nid ) );
+              // // $links['node_specific'][] = l('Answer the challenge', 'node/add/'.$one_type_name, $options);
+            // // endif;
+          // // break;
+
+          // // case 'user_group': 
+            // // if( $one_type['group'] ) :
+              // // // if( !og_is_member('node',$node->nid)
+              
+              
+              
+              
+              
+              // // // og_user_access('node', $GLOBALS['nodes']['page_node']->nid, 'create '.$one_type_name.' content') ) :
+                // // $options = array( 'query' => array( 'group_nid' => $GLOBALS['nodes']['page_node']->nid ) );
+                // // $links['node_specific'][] = l('Share a new '.$one_type['label'].' with the group', 'node/add/'.$one_type_name, $options);
+              // // // else :
+                // // // //$links['node_specific'][] = 'You do not have permission to create '.$one_type['label'].' content for this group. Please '.l('join the group', 
+              // // // endif;
+            // // endif;
+          // // break;
+
+          // // default:
+            // // // do nothing
+          // // break;
+          
+        // // endswitch;
+      // // endif;
+    // endforeach;
+    
+    // if( count($links['node_specific'])>0 ) :
+      // $out.= '
+// <section>
+  // <header>'.ucwords( str_replace('_', ' ', $GLOBALS['nodes']['page_node']->type) ).': '.$GLOBALS['nodes']['page_node']->title.'</header>
+  // <ul>
+    // <li>'.implode('</li><li>', $links['node_specific']).'</li>
+  // </ul>
+// </section>';
+    // endif;
+    
+    // // Add a little spacer if we have both
+    // if( count($links['node_specific'])>0 && count($links['general'])>0 ) :
+      // $out.= '
+// <div style="width: 100%; height: 10px;"></div>';
+    // endif;
+	
+    if( count($links['general'])>0 ) :
+      $out.= '
+<section>
+  <header>General Content</header>
+  <ul>
+    <li>'.implode('</li><li>', $links['general']).'</li>
+  </ul>
+</section>';
+    endif;
+    
+    return $out;
+  }
+  
+  function _common_functionality_idea_engine_stats_html() {
+    // Init
+    $out = '';
+    
+    // Gather data
+    $counts = array();
+
+    // Get a count of published ideas
+    $sql = "SELECT COUNT(*) as count FROM node WHERE type='idea' AND status=1";
+    $counts['ideas'] = db_query( $sql )->fetchField();
+
+    // Get a count of votes
+    $sql = "SELECT COUNT(*) as count 
+      FROM votingapi_vote 
+        INNER JOIN node ON votingapi_vote.entity_id=node.nid
+      WHERE node.type='idea' 
+        AND node.status=1";
+    $counts['votes'] = db_query( $sql )->fetchField();
+
+    // Get a count of comments
+    $sql = "SELECT COUNT(*) as count 
+      FROM comment 
+        INNER JOIN node ON comment.nid=node.nid
+      WHERE node.type='idea' 
+        AND node.status=1";
+    $counts['comments'] = db_query( $sql )->fetchField();
+    
+    // Build output
+    $out.= '
+      <span class="value stats-value">'.$counts['ideas'].'</span>
+      <span class="label stats-label"> Ideas</span>
+      <span class="value stats-value">'.$counts['votes'].'</span>
+      <span class="label stats-label"> Votes</span>
+      <span class="value stats-value">'.$counts['comments'].'</span>
+      <span class="label stats-label"> Comments</span>
+      <span class="value stats-value">1</span>
+      <span class="label stats-label"> Goal: Better Education</span>';
+      
+    return $out;
+  }
+  
+  function _common_functionality_group_header_user_bar_html() {
+    // Init
+    $out = '';
+    
+    // If the user is anonymous, offer login
+    if( user_is_logged_in() ) :
+      $out.= '<div class="user-options">
+        <a class="btn default" href="/user">Hello '.$GLOBALS['user']->name.'</a>
+        <a class="btn btn-info" href="/user/'.$GLOBALS['user']->uid.'/edit">Account</a>
+        <a class="btn btn-danger" href="/user/logout">Logout</a>
+      </div>';
+    else :
+      // Add a link to the login page
+      $out.= '<div class="login-toggle">
+        <a class="btn btn-danger" href="/user/login">Login</a>
+      </div>';
+    endif;
+    
+    return $out;
+  }
+  
+  function _common_functionality_dashboard_header_html() {
+    $out = '';
+    
+    $out.= '
+    <div class="dashboard-header-container">
+      <div class="dashboard-header-image">
+        <img src="/'.drupal_get_path('module', 'common_functionality').'/img/clockworks_and_gears.png" />
+      </div>
+      <div class="dashboard-header-overlay dashboard-header-overlay-background"></div>
+      <div class="dashboard-header-overlay dashboard-header-overlay-text">
+        <div class="idea-title-container">
+          <div class="idea-title"><h3>Welcome to the Idea Engine Dashboard</h3></div>
+        </div>
+        <div class="dashboard-header-label-container">
+          <div class="dashboard-header-description"><strong>This screen is the homepage once you have logged in.</strong> Your dashboard organizes the most pressing content such as ideas you care about, new content, and the current challenges just for you.</div>
+        </div>
+      </div>
+    </div>';
+    
+    return $out;
+  }
+   
+  /**
+   * Report a message to screen and log it
+   */
+  function _common_functionality_report_and_log($message, $status, $watchdog_type) {
+    // Convert status into dsm and watchdog statuses
+    switch( $status ) :
+      default:
+        $dsm_status = 'status';
+        $watchdog_status = WATCHDOG_DEBUG;
+      break;
+    endswitch;
+    
+    // Log to DB
+    watchdog($watchdog_type, $message, array(), $watchdog_status);
+    
+    // Report to screen
+    drupal_set_message( $message, $dsm_status );
+  }
+  
+  /**
+   * Take a date and return an array formatted for a drupal date field on a node
+   */
+  function _common_functionality_date_to_field( $date, $timezone = 'America/New_York' ) {
+    $date = date( 'Y-m-d H:i:s', strtotime($date) );
+    
+    $out = array(
+      'value' => $date,
+      'timezone' => $timezone,
+      'timezone_db' => $timezone,
+      'date_type' => 'datetime',
+    );
+
+    return $out;
+  }
+  
+  /**
+   * Helper function to quickly update an Idea node's workflow status
+   */
+  function _common_functionality_update_idea_node_workflow_status($node, $status) {
+    // Update status
+    $node->field_workflow_state[LANGUAGE_NONE][0] = array('tid' => $status);
+    node_save($node);
+    
+    // Report
+    _common_functionality_report_and_log( 'Idea '.l($node->title, 'node/'.$node->nid).' had workflow status set to TID: '.$status, 'debug', 'common_functionality');
+  }

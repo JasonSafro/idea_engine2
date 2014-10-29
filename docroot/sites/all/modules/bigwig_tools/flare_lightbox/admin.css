@@ -1,0 +1,41 @@
+.field-type-flare-lightbox .form-type-managed-file,
+.field-type-flare-lightbox .form-type-textarea,
+.field-type-flare-lightbox .form-type-textfield {
+	float: left;
+	margin-right: 2% !important;
+}
+
+.field-type-flare-lightbox .form-type-textfield {
+	min-height: 70px;
+	width: 25%;
+}
+
+.field-type-flare-lightbox .form-type-textfield input {
+	width: 100%;
+}
+
+.field-type-flare-lightbox .form-type-textarea {
+	width: 48%;
+}
+
+.field-thumbnail { 
+	float: left;
+	max-width: 270px;
+}
+
+.field-thumbnail .form-type-textfield {
+    float: left;
+	min-height: inherit;
+	width: 120px;
+	margin-right: 10px !important;
+}
+
+.field-thumbnail .form-type-textfield  input {
+	width: 50px;
+}
+
+.field-thumbnail .description { 
+	float: left;
+	width: 100%;
+	margin-top: 5px;
+}

@@ -1,0 +1,5 @@
+package = BigWig Tools
+name = Flare Lightbox
+description = Implements compound field to upload social media icons.
+
+core = "7.x"

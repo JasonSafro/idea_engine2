@@ -3473,8 +3473,8 @@ margin-left:-21px; }
 .hiddenLightboxContent{display:none!important; }
 .peFlareLightbox .peFlareLightboxControls a{display:block;
 float:right;
-width:30px;
-height:30px;
+width:50px;
+height:50px;
 opacity:.65; }
 .peFlareLightbox .peFlareLightboxControls a:hover{opacity:1; }
 .peFlareLightbox .peFlareLightboxControls a#peFlareLightboxControlPrev{background:url(../../framework/js/pe.flare/themes/default/img/prev.png) no-repeat 0 0; }

@@ -2,8 +2,8 @@
 .peFlareLightbox .peFlareLightboxControls a {
 	display: block;
 	float: right;
-	width: 50px;
-	height: 50px;
+	width: 30px;
+	height: 30px;
 	opacity:0.65;
 }
 
@@ -104,12 +104,12 @@ p.peFlareLightboxFontPreload {
 /*mobile resolution*/
 
 @media (min-width: 480px) and (max-width: 767px) {
-
+	
 	/*smaller video play icon*/
 	.peFlareLightbox a.peFlareLightboxVideoIcon span {
 		background: url("img/start_mob.png") no-repeat 0 0;
 	}
-
+	
 	.peFlareLightbox a.peFlareLightboxVideoIcon:hover span {
 		background-position: 0 -42px;
 	}

@@ -210,7 +210,14 @@
  *   );
  * @endcode
  */
-$databases = array();
+$databases['default']['default'] = array(
+  'driver' => 'mysql',
+  'database' => 'ideaengine',
+  'username' => 'root',
+  'password' => 'saturn',
+  'host' => 'localhost',
+  'prefix' => '',
+);
 
 /**
  * Access control for update.php script.

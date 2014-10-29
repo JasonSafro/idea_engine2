@@ -416,7 +416,7 @@
     if( user_is_logged_in() ) :
       $out.= '<div class="user-options">
         <a class="btn default" href="/user">Hello '.$GLOBALS['user']->name.'</a>
-        <a class="btn btn-info" href="/user/'.$GLOBALS['user']->uid.'/edit">Account</a>
+        <a class="btn default" href="/user/'.$GLOBALS['user']->uid.'/edit">Account</a>
         <a class="btn btn-danger" href="/user/logout">Logout</a>
       </div>';
     else :

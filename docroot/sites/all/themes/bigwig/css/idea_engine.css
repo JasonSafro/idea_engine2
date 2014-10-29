@@ -421,6 +421,53 @@ body.node-type-user-group div.hero-unit {
 /* BEGIN views styles */
 #block-views-user-ideas-block-user-ideas { margin-bottom: 25px; }
 
+div.view-search-challenges table.views-view-grid {
+  margin-bottom: 25px;
+}
+
+div.view-search-challenges div.one-challenge-container {
+  position: relative;
+}
+
+div.view-search-challenges div.one-challenge-container div.one-challenge-overlay {
+  background-color: rgba(7, 64, 133,0.7);
+  
+  height: 100%;
+  width: 100%;
+
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  
+  vertical-align: middle;
+  
+  display: none;
+}
+
+div.view-search-challenges div.one-challenge-container div.one-challenge-overlay-archive {
+  background-color: rgba(215, 51, 0, 0.7);
+}
+
+div.view-search-challenges div.one-challenge-container div.one-challenge-overlay div.text-container {
+  color: white;
+  
+  margin: 5%;
+  
+  height: 90%;
+  width: 90%;
+  
+  text-align: center;
+  vertical-align: middle;
+  
+}
+
+div.view-search-challenges div.one-challenge-container div.one-challenge-overlay div.text-container div.challenge-title {
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 30px;
+}
+
+
 div.view-bigwig-taxonomy div.view-header p {
   margin-bottom: 0px;
 }

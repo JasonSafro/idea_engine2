@@ -18,9 +18,15 @@ jQuery(document).ready(function() {
   jQuery('div.views-exposed-form .views-submit-button input.form-submit').addClass('btn');
   jQuery('div.views-exposed-form .views-submit-button input.form-submit').addClass('btn-success');
   
-  // Add text to slideshow controls
-//  jQuery('div.peFlareLightboxControls a#peFlareLightboxControlClose').html('Close');
-
+  // Add interactivity to the challenge items
+  jQuery('.view-search-challenges .one-challenge-container').bind({
+    mouseenter: function() {
+      jQuery(this).children('.one-challenge-overlay').css('display','block');
+    },
+    mouseleave: function() {
+      jQuery(this).children('.one-challenge-overlay').css('display','none');
+    }
+  });
 });
 
 /**

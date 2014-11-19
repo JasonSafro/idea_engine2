@@ -1,0 +1,5 @@
+name = "Data Import"
+description = "Dev module for porting data from old to new site"
+core = "7.x"
+package = "Idea Engine"
+

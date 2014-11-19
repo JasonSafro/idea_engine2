@@ -1,4 +1,7 @@
 /* BEGIN general styles */
+.cell { float: left; }
+.clear { clear: both; }
+
 table.views-table {
   width: 100%;
 }
@@ -73,6 +76,12 @@ li a.btn {
   position: absolute;
   top: -9px;
 }
+
+div.description {
+  font-style: italic;
+}
+
+.entered { background-color:rgba(7, 64, 133,0.6); }
 /* END general styles */
 
 
@@ -313,7 +322,7 @@ div.sidebar #block-node-recent div.more-link a {
 
 
 /* BEGIN challenge node styles */
-.contentBox-group-status-challenge-archived {
+body.node-type-challenge .contentBox-group-status-challenge-archived {
   background-color: #d73300;
 }
 /* END challenge node styles */
@@ -504,5 +513,17 @@ div.view-search-groups .view-header .hero-unit h3 {
 div.views-exposed-form .views-submit-button input.form-submit {
   position: relative;
   top: 3px;
+}
+
+div.view-header .hero-unit .left-right-container .left-right-cell {
+  /*border: 1px solid #dddddd;*/
+  min-height: 100%;
+  padding: 5px;
+  width: 45%;
+}
+
+div.view-header .hero-unit .left-right-container .left-right-spacer {
+  height: 10px;
+  width: 20px;
 }
 /* END views styles */

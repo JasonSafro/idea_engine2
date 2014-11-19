@@ -57,6 +57,7 @@
               <li><a class="btn btn-primary" href="/search/ideas">Vote</a></li>
               <li><a class="btn btn-primary" href="/search/groups">Join a Group</a></li>
               <li><a class="btn btn-primary" href="/search/challenges">Answer the Challenge</a></li>
+              <li><a class="btn btn-primary" href="#">Yammer</a></li>
             </ul>
             <?php endif; ?>
           </div>

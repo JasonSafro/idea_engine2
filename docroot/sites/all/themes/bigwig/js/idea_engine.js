@@ -27,6 +27,17 @@ jQuery(document).ready(function() {
       jQuery(this).children('.one-challenge-overlay').css('display','none');
     }
   });
+
+  // Add mouseover effect for search ideas page
+  jQuery('body.page-search-ideas .view-header .hero-unit .left-right-container .vote-cell').bind( 'mouseenter mouseleave', function() {
+    jQuery(this).toggleClass('entered');
+    jQuery('.view-search-ideas .view-content .views-field-field-rating').toggleClass('entered');
+  });
+  
+  jQuery('body.page-search-ideas .view-header .hero-unit .left-right-container .search-cell').bind( 'mouseenter mouseleave', function() {
+    jQuery(this).toggleClass('entered');
+    jQuery('.view-search-ideas .view-filters').toggleClass('entered');
+  });
 });
 
 /**

@@ -1,0 +1,9 @@
+name = Top Description
+description = Moves the "Description" on form elements to the top, under the label.
+
+; Core version (required)
+core = 7.x
+
+; Module dependencies
+dependencies[] = field
+dependencies[] = filter

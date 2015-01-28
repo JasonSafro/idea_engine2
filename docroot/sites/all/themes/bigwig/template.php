@@ -169,15 +169,17 @@
  		}
     
     // Custom updates for each content type
-    switch( $GLOBALS['nodes']['page_node']->type ) :
-      case 'challenge':
-        drupal_set_title( 'Challenge: '.$GLOBALS['nodes']['page_node']->title );
-      break;
-    
-      case 'user_group':
-        drupal_set_title( 'Welcome to the '.$GLOBALS['nodes']['page_node']->title.' group' );
-      break;
-    endswitch;
+    if( isset($GLOBALS['nodes']['page_node']) ) :
+      switch( $GLOBALS['nodes']['page_node']->type ) :
+        case 'challenge':
+          drupal_set_title( 'Challenge: '.$GLOBALS['nodes']['page_node']->title );
+        break;
+      
+        case 'user_group':
+          drupal_set_title( 'Welcome to the '.$GLOBALS['nodes']['page_node']->title.' group' );
+        break;
+      endswitch;
+    endif;
 	}
 
 

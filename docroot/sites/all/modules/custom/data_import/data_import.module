@@ -11,7 +11,107 @@ function data_import_init() {
     // _data_import_ideas();
     // _data_import_delete_ideas();
    // _data_import_votes();
+ //  _data_import_comments();
+ //_data_import_delete_comments();
 // die;
+}
+
+function _data_import_comments() {
+  $data_file = dirname( __FILE__ ).'/data/comments.csv';
+  
+  if( $handle = fopen( $data_file, 'r' ) ) :
+// $counter = 0;
+    while( $one_row = fgetcsv($handle) ) :
+      // var_dump($one_row); die;
+      
+      // Validate row
+      if( empty($one_row[0]) || empty($one_row[2]) || empty($one_row[3]) ) :
+        drupal_set_message('Skipping row b\c of empty value: '.$one_row[0].' - '.$one_row[2].' - '.$one_row[3], 'error');
+        continue;
+      endif;
+      
+      // Get the NID
+      $sql = "SELECT entity_id FROM field_data_field_old_nid WHERE field_old_nid_value=".$one_row[2];
+      $result = db_query($sql);
+      $nid = FALSE;
+      foreach( $result as $one_result ) :
+        if( !empty($one_result->entity_id) ) :
+          $nid = $one_result->entity_id;
+          break;
+        endif;
+      endforeach;
+      
+      // Need NID
+      if( !$nid ) :
+        drupal_set_message( 'NID not found. Skipping row with values '.$one_row[0].' - '.$one_row[2].' - '.$one_row[3], 'warning' );
+        continue;
+      endif;
+
+      // Get the user id
+      $sql = "SELECT entity_id FROM field_data_field_old_uid WHERE field_old_uid_value=".$one_row[3];
+      $result = db_query($sql);
+      $uid = FALSE;
+      foreach( $result as $one_result ) :
+        if( !empty($one_result->entity_id) ) :
+          $uid = $one_result->entity_id;
+          break;
+        endif;
+      endforeach;
+      
+      // Need UID
+      if( !$uid ) :
+        drupal_set_message( 'Assigning to ADMIN row with values '.implode(' - ',$one_row) );
+        $uid = 1;
+      endif;
+      
+      // Build comment object
+      $comment = new stdClass();
+
+      // Add fields
+      //$comment->cid = 0; // leave it as is
+      $comment->pid = 0; // parent comment id, 0 if none 
+      $comment->nid = $nid; // nid of a node you want to attach a comment to
+      $comment->uid = $uid; // user's id, who left the comment
+      $comment->subject = $one_row[4]; 
+      $comment->comment_body[LANGUAGE_NONE][0]['value'] = $one_row[5]; // Everything here is pretty much like with a node
+      $comment->comment_body[LANGUAGE_NONE][0]['format'] = 'filtered_html'; 
+      $comment->hostname = $one_row[6]; // OPTIONAL. You can log poster's ip here
+      $comment->created = $one_row[7]; // OPTIONAL. You can set any time you want here. Useful for backdated comments creation.
+      $comment->status = COMMENT_PUBLISHED; // We auto-publish this comment
+      $comment->thread = '01/'; // OPTIONAL. If you need comments to be threaded you can fill this value. Otherwise omit it.
+      $comment->mail = ''; // user's email
+      $comment->name = 'User name'; // If user is authenticated you can omit this field, it will be auto-populated, if the user is anonymous and you want to name him somehow, input his name here
+      $comment->is_anonymous = 0; // leave it as is
+      $comment->homepage = ''; // you can add homepage URL here
+      $comment->language = LANGUAGE_NONE; // The same as for a node    
+
+      // Save it up
+      comment_submit($comment); // prepare comment to be saved
+      comment_save($comment); // save the comment
+
+ // break;
+// // ++$counter;
+// // if( $counter > 10 ) break;
+    endwhile;
+    
+    fclose($handle);
+    drupal_set_message(__FUNCTION__.'() ran to completion');
+  else :
+    drupal_set_message('failed to open');
+  endif;
+die;
+}
+
+function _data_import_delete_comments() {
+  $sql = "SELECT cid FROM comment";
+  $result = db_query($sql);
+  
+  $all_cids = array();
+  foreach( $result as $one_result ) :
+    $all_cids[ $one_result->cid ] = $one_result->cid;
+  endforeach;
+  
+  comment_delete_multiple( $all_cids );
 }
 
 function _data_import_votes() {

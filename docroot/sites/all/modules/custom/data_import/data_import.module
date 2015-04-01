@@ -14,6 +14,42 @@ function data_import_init() {
  //  _data_import_comments();
  //_data_import_delete_comments();
 // die;
+
+  // //-----[ BEGIN Make successes from nodes ]-----
+  // // print '<pre>'; var_dump( node_load(1401) ); die;
+  // $sql = "SELECT entity_id FROM field_data_field_workflow_state WHERE field_workflow_state_tid=".TID_IDEA_STATUS_READY_FOR_IMPLEMENTATION;
+  // $result = db_query($sql);
+  // $nids = array();
+  // foreach( $result as $one_result ) :
+    // $nids[ $one_result->entity_id ] = $one_result->entity_id;
+    // // var_dump($one_result); die;
+  // endforeach;
+  // // var_dump($nids); die;
+  
+  // $nodes = node_load_multiple( $nids );
+  
+  // foreach( $nodes as $one_node ) :
+    // // Create new portfolio item
+    // $node = new stdClass();
+    // $node->title = $one_node->title;
+    // $node->type = 'portfolio';
+    // node_object_prepare($node); // Sets some defaults. Invokes hook_prepare() and hook_node_prepare().
+    
+    // $node->language = LANGUAGE_NONE; // Or e.g. 'en' if locale is enabled
+    // $node->uid = $one_node->uid; 
+    // $node->status = 1; //(1 or 0): published or not
+    // $node->promote = 0; //(1 or 0): promoted to front page
+    // //$node->comment = 2; // 0 = comments disabled, 1 = read only, 2 = read/write
+    // $node->created = time();
+    // $node->changed = time();
+    // $node->body = $one_node->body;
+    
+    // //create user in Drupal 7 site 
+ // // var_dump($node); die;
+    // node_save($node);
+  // endforeach;
+  // //-----[ END Make successes from nodes ]-----
+
 }
 
 function _data_import_comments() {

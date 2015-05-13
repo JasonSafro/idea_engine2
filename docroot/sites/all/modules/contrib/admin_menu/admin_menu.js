@@ -219,22 +219,6 @@ Drupal.admin.behaviors.destination = function (context, settings, $adminMenu) {
  *   it will not run last.
  */
 Drupal.admin.behaviors.hover = function (context, settings, $adminMenu) {
-  // Hover emulation for IE 6.
-
-  // JSAFRO: $.browser has been removed from jQuery. Replaced with new syntax as per https://www.drupal.org/node/1961178
-  //  if ($.browser.msie && parseInt(jQuery.browser.version) == 6) {
-
-  if (navigator.userAgent.match(/msie [6]/i)) {
-    $('li', $adminMenu).hover(
-      function () {
-        $(this).addClass('iehover');
-      },
-      function () {
-        $(this).removeClass('iehover');
-      }
-    );
-  }
-
   // Delayed mouseout.
   $('li.expandable', $adminMenu).hover(
     function () {

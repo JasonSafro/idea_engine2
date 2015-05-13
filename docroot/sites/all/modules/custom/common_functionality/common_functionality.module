@@ -88,6 +88,43 @@
         break;
       endswitch;
     endif;
+    
+    //-----[ BEGIN get list of groups users does NOT belong to ]-----
+    // Need this to filter the list of ideas
+
+      // Get list of all PRIVATE groups
+      $sql = '
+SELECT entity_id, 1 as etid
+  FROM field_data_group_access
+  WHERE group_access_value = 1';
+
+    // Run query and build an array of results
+    $result = db_query($sql);
+    $excluded_group_nids = array();
+    foreach( $result as $one_row ) :
+      $excluded_group_nids[ $one_row->entity_id ] = $one_row->entity_id;
+    endforeach;
+  
+    // Write the query
+    if( user_is_logged_in() ) :
+      // Get list of all PRIVATE groups that user is NOT a member of
+      $sql = '
+SELECT og_membership.gid
+  FROM og_membership
+  WHERE etid='.$GLOBALS['user']->uid.'
+';
+      $result = db_query($sql);
+      foreach( $result as $one_row ) :
+        if( isset( $excluded_group_nids[ $one_row->gid ] ) ) :
+          unset( $excluded_group_nids[ $one_row->gid ] );
+        endif;
+      endforeach;
+    endif;
+
+    // Stick data in $GLOBALS so it's available everywhere
+    $GLOBALS['prohibited_user_groups'] = $excluded_group_nids;
+    //-----[ END get list of groups users does NOT belong to ]-----
+    
   }
   
   /**

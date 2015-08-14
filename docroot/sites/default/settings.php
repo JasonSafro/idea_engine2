@@ -213,10 +213,10 @@
 
 $databases['default']['default'] = array(
   'driver' => 'mysql',
-  'database' => 'ideaengine_prod',
-  'username' => 'ideaengine_dbo',
-  'password' => '5up3y@maste@71lijZ',
-  'host' => '10.12.0.64',
+  'database' => 'ie_dev',
+  'username' => 'root',
+  'password' => '',
+  'host' => 'localhost',
   'prefix' => '',
 );
 
